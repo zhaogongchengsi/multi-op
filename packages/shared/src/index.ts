@@ -1,39 +1,19 @@
+import { z } from 'zod'
+
 // ========== Scheme ==========
 export const SCHEME = 'multi-op'
 
-// ========== View State ==========
-export type ViewPhase =
-  | 'creating'
-  | 'loading'
-  | 'intercepted'
-  | 'ready'
-  | 'active'
-  | 'hidden'
-  | 'destroyed'
+// ========== Platform (defined first — referenced by ViewInstance) ==========
+export const ZPlatformType = z.enum(['telegram', 'whatsapp', 'twitter'])
+export type PlatformType = z.infer<typeof ZPlatformType>
 
-export type AppPhase = 'init' | 'ready' | 'running' | 'stopping' | 'stopped'
-
-export interface ViewInstance {
-  id: string
-  platform: PlatformType
-  accountId: string
-  phase: ViewPhase
-  order: number
-  state: 'normal' | 'minimized' | 'maximized' | 'hidden'
-  flexGrow: number
-  minWidth: number
-  minHeight: number
-}
-
-// ========== Platform ==========
-export type PlatformType = 'telegram' | 'whatsapp' | 'twitter'
-
-export interface PlatformInfo {
-  type: PlatformType
-  name: string
-  url: string
-  icon: string
-}
+export const ZPlatformInfo = z.object({
+  type: ZPlatformType,
+  name: z.string(),
+  url: z.string(),
+  icon: z.string(),
+})
+export type PlatformInfo = z.infer<typeof ZPlatformInfo>
 
 export const PLATFORMS: Record<PlatformType, PlatformInfo> = {
   telegram: { type: 'telegram', name: 'Telegram', url: 'https://web.telegram.org', icon: '📱' },
@@ -41,34 +21,73 @@ export const PLATFORMS: Record<PlatformType, PlatformInfo> = {
   twitter: { type: 'twitter', name: 'Twitter/X', url: 'https://twitter.com', icon: '🐦' },
 }
 
+// ========== View State ==========
+export const ZViewPhase = z.enum([
+  'creating', 'loading', 'intercepted', 'ready', 'active', 'hidden', 'destroyed',
+])
+export type ViewPhase = z.infer<typeof ZViewPhase>
+
+export const ZAppPhase = z.enum(['init', 'ready', 'running', 'stopping', 'stopped'])
+export type AppPhase = z.infer<typeof ZAppPhase>
+
+export const ZViewState = z.enum(['normal', 'minimized', 'maximized', 'hidden'])
+export type ViewState = z.infer<typeof ZViewState>
+
+export const ZViewInstance = z.object({
+  id: z.string(),
+  platform: ZPlatformType,
+  accountId: z.string(),
+  phase: ZViewPhase,
+  order: z.number(),
+  state: ZViewState,
+  flexGrow: z.number(),
+  minWidth: z.number(),
+  minHeight: z.number(),
+})
+export type ViewInstance = z.infer<typeof ZViewInstance>
+
 // ========== Script ==========
-export interface ScriptManifest {
-  id: string
-  name: string
-  version: string
-  code: string
-  phase: 'preload' | 'postload'
-  enabled: boolean
-  priority: number
-  permissions: string[]
-  platforms: PlatformType[]
-}
+export const ZScriptPhase = z.enum(['preload', 'postload'])
+export type ScriptPhase = z.infer<typeof ZScriptPhase>
+
+export const ZScriptManifest = z.object({
+  id: z.string(),
+  name: z.string(),
+  version: z.string(),
+  code: z.string(),
+  phase: ZScriptPhase,
+  enabled: z.boolean(),
+  priority: z.number(),
+  permissions: z.array(z.string()),
+  platforms: z.array(ZPlatformType),
+})
+export type ScriptManifest = z.infer<typeof ZScriptManifest>
 
 // ========== Layout ==========
-export interface LayoutSnapshot {
-  mode: LayoutMode
-  views: Array<{
-    id: string
-    platform: PlatformType
-    accountId: string
-    bounds: { x: number; y: number; width: number; height: number }
-    state: 'normal' | 'minimized' | 'hidden'
-    order: number
-    flexGrow: number
-  }>
-}
+export const ZLayoutMode = z.enum(['tile', 'grid', 'stack', 'free'])
+export type LayoutMode = z.infer<typeof ZLayoutMode>
 
-export type LayoutMode = 'tile' | 'grid' | 'stack' | 'free'
+export const ZLayoutView = z.object({
+  id: z.string(),
+  platform: ZPlatformType,
+  accountId: z.string(),
+  bounds: z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+  }),
+  state: ZViewState,
+  order: z.number(),
+  flexGrow: z.number(),
+})
+export type LayoutView = z.infer<typeof ZLayoutView>
+
+export const ZLayoutSnapshot = z.object({
+  mode: ZLayoutMode,
+  views: z.array(ZLayoutView),
+})
+export type LayoutSnapshot = z.infer<typeof ZLayoutSnapshot>
 
 // ========== IPC ==========
 export const IPC_CHANNELS = {
@@ -83,11 +102,47 @@ export const IPC_CHANNELS = {
   ACCOUNT_LOGOUT: 'account:logout',
 } as const
 
+export const ZIpcChannel = z.enum([
+  'layout:update',
+  'view:focus',
+  'view:hide',
+  'view:show',
+  'view:remove',
+  'view:phase',
+  'script:reload',
+  'account:login',
+  'account:logout',
+])
+export type IpcChannel = z.infer<typeof ZIpcChannel>
+
 // ========== Hook ==========
-export interface HookConfig {
-  event: string
-  priority?: number
-  filter?: string // JSON stringified filter function
-  handler: string // JSON stringified handler function
-  platform?: PlatformType
-}
+export const ZHookConfig = z.object({
+  event: z.string(),
+  priority: z.number().optional(),
+  filter: z.string().optional(),
+  handler: z.string(),
+  platform: ZPlatformType.optional(),
+})
+export type HookConfig = z.infer<typeof ZHookConfig>
+
+// ========== IPC Payload Schemas (for cross-process validation) ==========
+
+export const ZLayoutUpdatePayload = z.object({
+  views: z.array(ZLayoutView),
+})
+export type LayoutUpdatePayload = z.infer<typeof ZLayoutUpdatePayload>
+
+export const ZScriptReloadPayload = z.object({
+  viewId: z.string(),
+  scriptId: z.string(),
+})
+export type ScriptReloadPayload = z.infer<typeof ZScriptReloadPayload>
+
+export const ZAccountPayload = z.object({
+  id: z.string(),
+  platform: ZPlatformType,
+  accountId: z.string(),
+  cookies: z.string().nullable(),
+  status: z.enum(['active', 'inactive', 'expired']),
+})
+export type AccountPayload = z.infer<typeof ZAccountPayload>
