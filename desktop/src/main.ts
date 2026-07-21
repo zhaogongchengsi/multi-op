@@ -1,179 +1,79 @@
-import { app, BaseWindow, WebContentsView, session } from 'electron'
-import { resolve } from 'node:path'
-import { createRouter, LayoutManager, AccountManager, ScriptManager } from '@multi-op/core'
-import { migrateDb } from '@multi-op/database'
-import { SCHEME, PLATFORMS } from '@multi-op/shared'
-import type { PlatformType } from '@multi-op/shared'
-import { getInterceptorCode as tgInterceptor } from '@multi-op/adapter-telegram'
-import { getInterceptorCode as waInterceptor } from '@multi-op/adapter-whatsapp'
-import { getInterceptorCode as twInterceptor } from '@multi-op/adapter-twitter'
-
-const INTERCEPTORS: Record<string, () => string> = {
-  telegram: tgInterceptor,
-  whatsapp: waInterceptor,
-  twitter: twInterceptor,
-}
-
-// ========== Init ==========
-
-const router = createRouter()
-const layoutManager = { manager: null as LayoutManager | null }
+import { app, BrowserWindow, nativeImage } from 'electron'
+import { resolve, join } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { AppLifecycle, MainWindow } from '@multi-op/core'
+import { runMigrations } from '@multi-op/database'
 
 // ========== Bootstrap ==========
 
-async function bootstrap() {
-  router.registerPrivileged()
+const lifecycle = new AppLifecycle()
+const mainWindow = new MainWindow()
 
-  await app.whenReady()
+const preloadPath = resolve(__dirname, '../packages/preload/dist/index.mjs')
+const rendererPath = resolve(__dirname, '../packages/renderer/dist/index.html')
 
-  await migrateDb()
+// Icon paths
+const resourcesPath = resolve(__dirname, '../resources')
+const iconDesktop = join(resourcesPath, 'icon.svg')
 
-  const win = new BaseWindow({
-    width: 1200,
-    height: 800,
-    title: 'MultiOp',
+function createMainWindow() {
+  const win = mainWindow.create({
+    icon: iconDesktop,
     webPreferences: {
-      preload: resolve(__dirname, '../packages/preload/src/index.ts'),
+      preload: preloadPath,
       contextIsolation: true,
       sandbox: false,
     },
   })
 
-  router.registerToSession()
-
-  const lm = new LayoutManager(win)
-  layoutManager.manager = lm
-
-  registerRoutes(router, win, lm)
+  win.on('closed', () => {
+    lifecycle.stop()
+  })
 
   if (process.env.NODE_ENV === 'development') {
     win.loadURL('http://localhost:5173')
     win.webContents.openDevTools()
   } else {
-    win.loadFile(resolve(__dirname, '../packages/renderer/dist/index.html'))
+    win.loadFile(rendererPath)
   }
 
-  const accounts = new AccountManager()
-  const savedAccounts = await accounts.list()
-  for (const acc of savedAccounts) {
-    if (acc.status === 'active') {
-      createPlatformView(win, lm, acc.platform as PlatformType, acc.accountId)
-    }
-  }
+  return win
 }
 
-// ========== Platform View Factory ==========
+const bootstrap = () => {
+  // Initialize database
+  runMigrations()
 
-function createPlatformView(
-  win: BaseWindow,
-  lm: LayoutManager,
-  platform: PlatformType,
-  accountId: string,
-) {
-  const platformInfo = PLATFORMS[platform]
-  const id = `${platform}_${accountId}`
-  const partition = `persist:${platform}_${accountId}`
-  const sess = session.fromPartition(partition)
+  // Start lifecycle
+  lifecycle.start()
 
-  const view = new WebContentsView({
-    webPreferences: {
-      session: sess,
-      contextIsolation: true,
-      sandbox: false,
-    },
-  })
+  // Create main window
+  createMainWindow()
 
-  let injected = false
-  view.webContents.on('did-start-loading', () => {
-    if (injected) return
-    injected = true
-    const getCode = INTERCEPTORS[platform]
-    if (getCode) {
-      view.webContents.executeJavaScript(`
-        (function() { ${getCode()} })(); true;
-      `, { worldId: 0 })
+  // macOS: re-create window on activate
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createMainWindow()
     }
   })
 
-  view.webContents.on('did-finish-load', () => {
-    const scriptManager = new ScriptManager()
-    scriptManager.injectScripts(view, id, platform)
+  // Quit when all windows closed (non-macOS)
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
   })
 
-  win.contentView.addChildView(view)
-  view.webContents.loadURL(platformInfo.url)
-
-  lm.addView(id, platform, accountId, { view })
-}
-
-// ========== API Routes ==========
-
-function registerRoutes(router: ReturnType<typeof createRouter>, win: BaseWindow, lm: LayoutManager) {
-  router.get('/api/views', () => {
-    const snapshot = lm.getSnapshot()
-    return new Response(JSON.stringify(snapshot), {
-      headers: { 'content-type': 'application/json' },
-    })
-  })
-
-  router.post('/api/views/create', (req) => {
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { 'content-type': 'application/json' },
-    })
-  })
-
-  router.post('/api/views/hide', async (req) => {
-    const body = await req.json() as any
-    lm.hide(body.id)
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { 'content-type': 'application/json' },
-    })
-  })
-
-  router.post('/api/views/show', async (req) => {
-    const body = await req.json() as any
-    lm.show(body.id)
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { 'content-type': 'application/json' },
-    })
-  })
-
-  router.post('/api/views/layout', async (req) => {
-    const body = await req.json() as any
-    lm.setLayout(body.mode)
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { 'content-type': 'application/json' },
-    })
-  })
-
-  router.post('/api/views/resize', async (req) => {
-    const body = await req.json() as any
-    lm.resizeView(body.id, body.deltaX, body.deltaY)
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { 'content-type': 'application/json' },
-    })
+  // Cleanup on quit
+  app.on('before-quit', () => {
+    lifecycle.stop()
   })
 }
 
-// ========== Lifecycle ==========
+// ========== Entry ==========
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
-
-app.on('activate', () => {
-  if (BaseWindow.getAllWindows().length === 0) {
-    bootstrap()
-  }
-})
-
-app.on('before-quit', () => {
-  layoutManager.manager?.destroyAll()
-})
-
-bootstrap().catch((err) => {
+app.whenReady().then(bootstrap).catch((err: unknown) => {
   console.error('[MultiOp] Bootstrap failed:', err)
   process.exit(1)
 })
+

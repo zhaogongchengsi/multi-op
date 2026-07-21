@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "main": "dist/main.js",
+  "type": "module",
   "scripts": {
-    "dev": "tsc && electron .",
-    "build": "tsc",
+    "dev": "tsdown && electron .",
+    "build": "tsdown",
     "clean": "rm -rf dist out",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
@@ -13,12 +14,8 @@
   "dependencies": {
     "@multi-op/core": "workspace:*",
     "@multi-op/database": "workspace:*",
-    "@multi-op/preload": "workspace:*",
     "@multi-op/renderer": "workspace:*",
-    "@multi-op/shared": "workspace:*",
-    "@multi-op/adapter-telegram": "workspace:*",
-    "@multi-op/adapter-whatsapp": "workspace:*",
-    "@multi-op/adapter-twitter": "workspace:*"
+    "@multi-op/shared": "workspace:*"
   },
   "devDependencies": {
     "electron": "^43.1.1",
@@ -29,10 +26,22 @@
     "appId": "com.multi-op.app",
     "productName": "MultiOp",
     "files": [
-      "dist/**/*"
+      "dist/**/*",
+      "resources/**/*"
     ],
     "directories": {
       "output": "release"
+    },
+    "mac": {
+      "icon": "resources/icon.svg",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "icon": "resources/icon.svg"
+    },
+    "linux": {
+      "icon": "resources/icon.svg",
+      "category": "Utility"
     }
   }
 }

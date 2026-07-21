@@ -2,20 +2,24 @@
   "name": "multi-op",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "description": "Multi-opener desktop app for TG, WA, TW platforms with hook & script system",
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "build": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/preload -F @multi-op/desktop && cd packages/renderer && npx vite build",
+    "build:libs": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/preload",
+    "build:renderer": "cd packages/renderer && npx vite build",
+    "build:desktop": "cd desktop && npx tsdown",
     "dev:desktop": "turbo dev --filter @multi-op/desktop",
-    "build:desktop": "turbo build --filter @multi-op/desktop",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,json}\""
   },
   "devDependencies": {
+    "prettier": "^3.9.6",
+    "tsdown": "^0.22.12",
     "turbo": "^2.10.5",
-    "typescript": "^7.0.2",
-    "prettier": "^3.9.6"
+    "typescript": "^7.0.2"
   },
   "packageManager": "pnpm@10.14.0",
   "engines": {
