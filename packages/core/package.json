@@ -14,7 +14,7 @@
     "@multi-op/database": "workspace:*"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
-    "typescript": "^5.7.0"
+    "electron": "^43.1.1",
+    "typescript": "^7.0.2"
   }
 }
