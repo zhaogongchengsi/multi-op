@@ -1,6 +1,6 @@
 import { WebContentsView } from 'electron'
 import type { ScriptManifest } from '@multi-op/shared'
-import { getDb } from './database'
+import { getDb } from '@multi-op/database'
 
 export class ScriptManager {
   private loaded = new Map<string, Set<string>>() // viewId → scriptId[]

@@ -18,29 +18,32 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
-  apps/desktop:
+  desktop:
     dependencies:
       '@multi-op/adapter-telegram':
         specifier: workspace:*
-        version: link:../../packages/adapters/telegram
+        version: link:../packages/adapters/telegram
       '@multi-op/adapter-twitter':
         specifier: workspace:*
-        version: link:../../packages/adapters/twitter
+        version: link:../packages/adapters/twitter
       '@multi-op/adapter-whatsapp':
         specifier: workspace:*
-        version: link:../../packages/adapters/whatsapp
+        version: link:../packages/adapters/whatsapp
       '@multi-op/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../packages/core
+      '@multi-op/database':
+        specifier: workspace:*
+        version: link:../packages/database
       '@multi-op/preload':
         specifier: workspace:*
-        version: link:../../packages/preload
+        version: link:../packages/preload
       '@multi-op/renderer':
         specifier: workspace:*
-        version: link:../../packages/renderer
+        version: link:../packages/renderer
       '@multi-op/shared':
         specifier: workspace:*
-        version: link:../../packages/shared
+        version: link:../packages/shared
     devDependencies:
       electron:
         specifier: ^33.0.0
@@ -84,19 +87,29 @@ importers:
 
   packages/core:
     dependencies:
-      '@libsql/client':
-        specifier: ^0.14.0
-        version: 0.14.0
+      '@multi-op/database':
+        specifier: workspace:*
+        version: link:../database
       '@multi-op/shared':
         specifier: workspace:*
         version: link:../shared
-      drizzle-orm:
-        specifier: ^0.38.0
-        version: 0.38.4(@libsql/client@0.14.0)(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       electron:
         specifier: ^33.0.0
         version: 33.4.11
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/database:
+    dependencies:
+      '@libsql/client':
+        specifier: ^0.14.0
+        version: 0.14.0
+      drizzle-orm:
+        specifier: ^0.38.0
+        version: 0.38.4(@libsql/client@0.14.0)(@types/react@19.2.17)(react@19.2.7)
+    devDependencies:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

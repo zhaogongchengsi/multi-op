@@ -1,5 +1,5 @@
 import type { PlatformType } from '@multi-op/shared'
-import { getDb } from './database'
+import { getDb } from '@multi-op/database'
 
 interface Account {
   id: string

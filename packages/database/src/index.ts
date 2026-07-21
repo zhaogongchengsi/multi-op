@@ -1,23 +1,26 @@
 import { createClient } from '@libsql/client'
 import { join } from 'node:path'
-import { app } from 'node:process'
 import { existsSync, mkdirSync } from 'node:fs'
 
 let db: ReturnType<typeof createClient> | null = null
 
+function getUserDataPath(): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { app } = require('electron')
+    if (app?.getPath) return app.getPath('userData')
+  } catch {
+    // 不在 Electron 环境，fallback 到 cwd
+  }
+  return process.cwd()
+}
+
 export function getDb() {
   if (!db) {
-    const userDataDir = join(
-      typeof app !== 'undefined' && (app as any).getPath
-        ? (app as any).getPath('userData')
-        : process.cwd(),
-      '.multi-op',
-    )
-
+    const userDataDir = join(getUserDataPath(), '.multi-op')
     if (!existsSync(userDataDir)) {
       mkdirSync(userDataDir, { recursive: true })
     }
-
     db = createClient({
       url: `file://${join(userDataDir, 'multi-op.db')}`,
     })
@@ -27,7 +30,6 @@ export function getDb() {
 
 export async function migrateDb() {
   const client = getDb()
-  // 初始化表结构
   await client.execute(`
     CREATE TABLE IF NOT EXISTS accounts (
       id TEXT PRIMARY KEY,

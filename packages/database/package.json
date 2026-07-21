@@ -1,5 +1,5 @@
 {
-  "name": "@multi-op/core",
+  "name": "@multi-op/database",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",
@@ -10,11 +10,10 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@multi-op/shared": "workspace:*",
-    "@multi-op/database": "workspace:*"
+    "@libsql/client": "^0.14.0",
+    "drizzle-orm": "^0.38.0"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
     "typescript": "^5.7.0"
   }
 }

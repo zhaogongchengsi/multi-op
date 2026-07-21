@@ -12,5 +12,4 @@ export { AccountManager } from './account-manager'
 // ========== Script Manager ==========
 export { ScriptManager } from './script-manager'
 
-// ========== Database ==========
-export { db, migrateDb } from './database'
+// ========== Database (extracted to @multi-op/database) ==========

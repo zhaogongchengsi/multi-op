@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@multi-op/core": "workspace:*",
+    "@multi-op/database": "workspace:*",
     "@multi-op/preload": "workspace:*",
     "@multi-op/renderer": "workspace:*",
     "@multi-op/shared": "workspace:*",
