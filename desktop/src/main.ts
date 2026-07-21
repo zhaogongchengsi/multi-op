@@ -1,8 +1,14 @@
-import { app, BrowserWindow, nativeImage } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import { resolve, join } from 'node:path'
-import { readFileSync } from 'node:fs'
 import { AppLifecycle, MainWindow } from '@multi-op/core'
 import { runMigrations } from '@multi-op/database'
+
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+
+if (!gotSingleInstanceLock) {
+  app.quit()
+}
 
 // ========== Bootstrap ==========
 
@@ -71,9 +77,15 @@ const bootstrap = () => {
 }
 
 // ========== Entry ==========
-
 app.whenReady().then(bootstrap).catch((err: unknown) => {
   console.error('[MultiOp] Bootstrap failed:', err)
   process.exit(1)
 })
 
+process.on('uncaughtException', (error) => {
+  console.log('[Main] Uncaught Exception:', error)
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.log('[Main] Unhandled Rejection:', reason)
+})
