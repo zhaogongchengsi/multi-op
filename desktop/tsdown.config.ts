@@ -1,10 +1,15 @@
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
-  entry: ['src/main.ts'],
+  entry: {
+    main: 'src/main.ts',
+    preload: 'src/preload.ts',
+  },
   format: ['esm'],
   platform: 'node',
-  dts: true,
+  dts: false,
   sourcemap: true,
-  clean: true,
+  deps: {
+    neverBundle: ['electron', 'better-sqlite3', '@multi-op/renderer'],
+  },
 })

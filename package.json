@@ -6,11 +6,12 @@
   "description": "Multi-opener desktop app for TG, WA, TW platforms with hook & script system",
   "scripts": {
     "dev": "turbo dev",
-    "build": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/preload -F @multi-op/desktop && cd packages/renderer && npx vite build",
-    "build:libs": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/preload",
+    "dev:renderer": "cd packages/renderer && npx vite",
+    "dev:desktop": "cd desktop && tsdown && electron .",
+    "build": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/desktop && pnpm build:renderer",
+    "build:libs": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database",
     "build:renderer": "cd packages/renderer && npx vite build",
-    "build:desktop": "cd desktop && npx tsdown",
-    "dev:desktop": "turbo dev --filter @multi-op/desktop",
+    "build:desktop": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/desktop",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,json}\""

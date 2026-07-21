@@ -15,10 +15,7 @@ if (!gotSingleInstanceLock) {
 const lifecycle = new AppLifecycle()
 const mainWindow = new MainWindow()
 
-const preloadPath = resolve(__dirname, '../packages/preload/dist/index.mjs')
-const rendererPath = resolve(__dirname, '../packages/renderer/dist/index.html')
-
-// Icon paths
+const preloadPath = join(__dirname, 'preload.mjs')
 const resourcesPath = resolve(__dirname, '../resources')
 const iconDesktop = join(resourcesPath, 'icon.svg')
 
@@ -37,9 +34,10 @@ function createMainWindow() {
   })
 
   if (process.env.NODE_ENV === 'development') {
-    win.loadURL('http://localhost:5173')
+    win.loadURL('http://localhost:4173')
     win.webContents.openDevTools()
   } else {
+    const rendererPath = join(process.resourcesPath, 'renderer', 'index.html')
     win.loadFile(rendererPath)
   }
 
