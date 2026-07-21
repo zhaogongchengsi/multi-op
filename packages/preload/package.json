@@ -1,0 +1,19 @@
+{
+  "name": "@multi-op/preload",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@multi-op/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "typescript": "^5.7.0"
+  }
+}

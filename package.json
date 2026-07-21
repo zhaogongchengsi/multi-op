@@ -1,0 +1,24 @@
+{
+  "name": "multi-op",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Multi-opener desktop app for TG, WA, TW platforms with hook & script system",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "dev:desktop": "turbo dev --filter @multi-op/desktop",
+    "build:desktop": "turbo build --filter @multi-op/desktop",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,json}\""
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0",
+    "prettier": "^3.4.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@multi-op/desktop",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsc && electron .",
+    "build": "tsc",
+    "clean": "rm -rf dist out",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "@multi-op/core": "workspace:*",
+    "@multi-op/preload": "workspace:*",
+    "@multi-op/renderer": "workspace:*",
+    "@multi-op/shared": "workspace:*",
+    "@multi-op/adapter-telegram": "workspace:*",
+    "@multi-op/adapter-whatsapp": "workspace:*",
+    "@multi-op/adapter-twitter": "workspace:*"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "typescript": "^5.7.0"
+  },
+  "build": {
+    "appId": "com.multi-op.app",
+    "productName": "MultiOp",
+    "files": [
+      "dist/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  }
+}
