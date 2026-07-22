@@ -5,6 +5,7 @@ import { bootstrapDatabase } from './database.js'
 import { createRouter } from '@holix/router'
 import { createStaticMiddleware } from '@holix/static'
 import { SCHEME } from '@multi-op/shared'
+import { writeCrashLog } from './logger.js'
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -130,13 +131,16 @@ app
   .then(bootstrap)
   .catch((err: unknown) => {
     console.error('[MultiOp] Bootstrap failed:', err)
+    if (import.meta.env.PROD) writeCrashLog(err)
     process.exit(1)
   })
 
 process.on('uncaughtException', (error) => {
   console.log('[Main] Uncaught Exception:', error)
+  if (import.meta.env.PROD) writeCrashLog(error)
 })
 
 process.on('unhandledRejection', (reason) => {
   console.log('[Main] Unhandled Rejection:', reason)
+  if (import.meta.env.PROD) writeCrashLog(reason)
 })
