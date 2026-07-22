@@ -35,7 +35,7 @@
     "directories": {
       "output": "release"
     },
-    "extraFiles": [
+    "extraResources": [
       {
         "from": "../packages/database/drizzle",
         "to": "drizzle",

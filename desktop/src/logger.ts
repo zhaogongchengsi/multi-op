@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync, existsSync } from 'node:fs'
 
 function getLogDir(): string {
   try {
-    return join(app.getPath('userData'), '.multi-op')
+    return join(app.getPath('home'), '.multi-op')
   } catch {
     return join(process.cwd(), '.multi-op')
   }
