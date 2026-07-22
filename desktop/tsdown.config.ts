@@ -10,6 +10,6 @@ export default defineConfig({
   dts: false,
   sourcemap: true,
   deps: {
-    neverBundle: ['electron', 'better-sqlite3', '@multi-op/renderer'],
+    neverBundle: ['electron', 'better-sqlite3', '@multi-op/database', '@multi-op/renderer'],
   },
 })

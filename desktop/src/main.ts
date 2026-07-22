@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle, MainWindow } from '@multi-op/core'
-import { initDb, runMigrations } from '@multi-op/database'
+import { bootstrapDatabase } from './database.js'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -45,10 +45,8 @@ function createMainWindow() {
 }
 
 const bootstrap = () => {
-  // Initialize database
-  const dbDir = app.getPath('userData')
-  initDb(join(dbDir, 'multi-op.db'))
-  runMigrations()
+  // Initialize database (dev → cwd, prod → userData)
+  bootstrapDatabase()
 
   // Start lifecycle
   lifecycle.start()
