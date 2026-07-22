@@ -7,6 +7,7 @@ import { createStaticMiddleware } from '@holix/static'
 import { SCHEME } from '@multi-op/shared'
 import { logger, writeCrashLog } from './logger.js'
 import { createAppWindow } from './window.js'
+import { registerSessionRoutes } from './router/session.js'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -58,6 +59,11 @@ const bootstrap = async () => {
   logger.info('Initializing database...')
   bootstrapDatabase()
   logger.info('Database initialized')
+
+  // Register API routes
+  logger.info('Registering API routes...')
+  registerSessionRoutes(router)
+  logger.info('Session routes registered')
 
   // Start lifecycle
   logger.info('Starting app lifecycle...')
