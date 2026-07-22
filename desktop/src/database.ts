@@ -11,13 +11,11 @@ import { initDb, runMigrations } from '@multi-op/database'
  * - production:  db 在 userData/.multi-op/db.db，迁移文件在 resources/drizzle/
  */
 export function bootstrapDatabase() {
-  const isDev = !app.isPackaged
-
-  const dbDir = isDev
+  const dbDir = import.meta.env.DEV
     ? join(process.cwd(), '.multi-op')
     : join(app.getPath('userData'), '.multi-op')
 
-  const migrationsDir = isDev
+  const migrationsDir = import.meta.env.DEV
     ? resolve(dirname(fileURLToPath(import.meta.url)), '../../packages/database/drizzle')
     : join(process.resourcesPath, 'drizzle')
 

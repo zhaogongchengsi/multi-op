@@ -1,5 +1,7 @@
 import { defineConfig } from 'tsdown'
 
+const isProd = process.env.NODE_ENV === 'production'
+
 export default defineConfig({
   entry: {
     main: 'src/main.ts',
@@ -9,7 +11,12 @@ export default defineConfig({
   platform: 'node',
   dts: false,
   sourcemap: true,
+  define: {
+    'import.meta.env.DEV': JSON.stringify(!isProd),
+    'import.meta.env.PROD': JSON.stringify(isProd),
+    'import.meta.env.MODE': JSON.stringify(isProd ? 'production' : 'development'),
+  },
   deps: {
-    neverBundle: ['electron', 'better-sqlite3', '@multi-op/database', '@multi-op/renderer'],
+    neverBundle: ['electron', 'better-sqlite3', '@libsql/client', '@multi-op/database'],
   },
 })

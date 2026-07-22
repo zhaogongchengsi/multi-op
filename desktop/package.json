@@ -2,16 +2,20 @@
   "name": "@multi-op/desktop",
   "version": "0.0.1",
   "private": true,
-  "main": "dist/main.js",
+  "main": "./dist/main.mjs",
   "type": "module",
   "scripts": {
-    "dev": "tsdown && electron .",
-    "build": "tsdown",
+    "dev": "NODE_ENV=development tsdown && electron .",
+    "build": "NODE_ENV=production tsdown",
     "clean": "rm -rf dist out",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "predist": "cd .. && pnpm build:libs && pnpm build:renderer && rm -rf desktop/dist/client && cp -r packages/renderer/dist desktop/dist/client",
+    "dist": "NODE_ENV=production electron-builder",
+    "prepack": "cd .. && pnpm build:libs && pnpm build:renderer && rm -rf desktop/dist/client && cp -r packages/renderer/dist desktop/dist/client",
+    "pack": "electron-builder --dir"
   },
   "dependencies": {
+    "@holix/router": "^0.0.3",
+    "@holix/static": "^0.0.6",
     "@multi-op/core": "workspace:*",
     "@multi-op/database": "workspace:*",
     "@multi-op/shared": "workspace:*"
@@ -31,6 +35,15 @@
     "directories": {
       "output": "release"
     },
+    "extraFiles": [
+      {
+        "from": "../packages/database/drizzle",
+        "to": "drizzle",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "npmRebuild": true,
     "buildDependenciesFromSource": true,
     "mac": {

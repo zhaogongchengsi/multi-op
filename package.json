@@ -8,10 +8,10 @@
     "dev": "turbo dev",
     "dev:renderer": "cd packages/renderer && npx vite",
     "dev:desktop": "cd desktop && tsdown && electron .",
-    "build": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/desktop && pnpm build:renderer",
-    "build:libs": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database",
+    "build": "pnpm build:libs && pnpm build:renderer && rm -rf desktop/dist/client && cp -r packages/renderer/dist desktop/dist/client",
+    "build:libs": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/desktop",
     "build:renderer": "cd packages/renderer && npx vite build",
-    "build:desktop": "tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/desktop",
+    "package": "cd desktop && pnpm dist",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,json}\""

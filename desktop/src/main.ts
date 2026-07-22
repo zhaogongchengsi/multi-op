@@ -2,6 +2,8 @@ import { app, BrowserWindow } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle, MainWindow } from '@multi-op/core'
 import { bootstrapDatabase } from './database.js'
+import { createRouter } from '@holix/router'
+import { createStaticMiddleware } from '@holix/static'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -11,13 +13,24 @@ if (!gotSingleInstanceLock) {
 }
 
 // ========== Bootstrap ==========
-
+const router = createRouter()
 const lifecycle = new AppLifecycle()
 const mainWindow = new MainWindow()
 
 const preloadPath = join(__dirname, 'preload.mjs')
 const resourcesPath = resolve(__dirname, '../resources')
 const iconDesktop = join(resourcesPath, 'icon.svg')
+
+// 生产环境静态文件服务
+if (import.meta.env.PROD) {
+  router.use(
+    createStaticMiddleware({
+      root: resolve(import.meta.dirname, './client'),
+      prefix: '/',
+      ignorePaths: ['/api/**', '/trpc/**'],
+    }),
+  )
+}
 
 function createMainWindow() {
   const win = mainWindow.create({
@@ -33,7 +46,7 @@ function createMainWindow() {
     lifecycle.stop()
   })
 
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     win.loadURL('http://localhost:4173')
     win.webContents.openDevTools()
   } else {
