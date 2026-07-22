@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol } from 'electron'
+import { app, BrowserWindow, ipcMain, protocol } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle } from '@multi-op/core'
 import { bootstrapDatabase } from './database.js'
@@ -75,14 +75,39 @@ const bootstrap = async () => {
     logger.info(`Lifecycle phase transition: ${prev} -> ${phase}`)
   })
 
+  // ─── IPC: Window controls (for frameless window) ──────────────
+  ipcMain.on('window:minimize', (event) => {
+    BrowserWindow.fromWebContents(event.sender)?.minimize()
+  })
+  ipcMain.on('window:maximize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (win?.isMaximized()) {
+      win.unmaximize()
+    } else {
+      win?.maximize()
+    }
+  })
+  ipcMain.on('window:close', (event) => {
+    BrowserWindow.fromWebContents(event.sender)?.close()
+  })
+
   // Create main window (created with show: false, shown on ready-to-show)
   logger.info('Creating main window...')
-  await createAppWindow({
+  const mainWin = await createAppWindow({
     preloadPath,
     iconPath,
     lifecycle,
     router,
   })
+
+  // Notify renderer of maximize state changes
+  mainWin.on('maximize', () => {
+    mainWin.webContents.send('window:maximized-change', true)
+  })
+  mainWin.on('unmaximize', () => {
+    mainWin.webContents.send('window:maximized-change', false)
+  })
+
   logger.info('Main window created')
 
   // macOS: re-create window on activate

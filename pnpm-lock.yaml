@@ -51,7 +51,7 @@ importers:
         specifier: workspace:*
         version: link:../packages/shared
       ky:
-        specifier: ^1.7.5
+        specifier: ^1.14.3
         version: 1.14.3
     devDependencies:
       electron:
@@ -128,6 +128,9 @@ importers:
       '@tanstack/react-router':
         specifier: ^1.170.18
         version: 1.170.18(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      ky:
+        specifier: ^1.14.3
+        version: 1.14.3
       react:
         specifier: ^19.2.7
         version: 19.2.7

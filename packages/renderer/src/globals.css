@@ -8,3 +8,71 @@
 .astryx-app-shell-sidenav {
   overflow-x: hidden !important;
 }
+
+/* ─── 自定义标题栏 (Windows/Linux 无边框窗口) ─────── */
+
+.title-bar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+  user-select: none;
+  padding-left: 12px;
+  padding-right: 0;
+  background: var(--color-background-surface);
+}
+
+.title-bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #888);
+  opacity: 0.8;
+}
+
+.title-bar-controls {
+  display: flex;
+  margin-left: auto;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+.title-bar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary, #ccc);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.title-bar-btn:hover {
+  background: var(--color-background-muted);
+}
+
+.title-bar-btn.title-bar-close:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+.app-shell-top-nav {
+  -webkit-app-region: drag;
+}
+
+.title-bar-controls {
+  -webkit-app-region: no-drag;
+}
+/* 侧边栏顶部标题区域可作为窗口拖拽手柄 */
+[data-platform='macos'] .astryx-side-nav-heading {
+  -webkit-app-region: drag;
+}
+
+/* 导航项可交互，不受拖拽区域影响 */
+[data-platform='macos'] .astryx-side-nav-item,
+[data-platform='macos'] .astryx-side-nav-collapse-button {
+  -webkit-app-region: no-drag;
+}

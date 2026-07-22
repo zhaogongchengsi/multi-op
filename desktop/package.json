@@ -20,7 +20,7 @@
     "@multi-op/database": "workspace:*",
     "@multi-op/logger": "workspace:*",
     "@multi-op/shared": "workspace:*",
-    "ky": "^1.7.5"
+    "ky": "^1.14.3"
   },
   "devDependencies": {
     "electron": "^43.1.1",

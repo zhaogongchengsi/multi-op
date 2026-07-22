@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState, useEffect, useCallback} from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {AppShell} from '@astryxdesign/core/AppShell'
 import {Divider} from '@astryxdesign/core/Divider'
@@ -23,7 +23,11 @@ import {
   UserIcon,
   BuildingOffice2Icon,
   CodeBracketIcon,
+  MinusIcon,
+  Square2StackIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
+import { IconType } from '@astryxdesign/core';
 
 type Conversation = {
   label: string
@@ -124,84 +128,109 @@ function ConversationItem({
   )
 }
 
+const isWin = navigator.platform.startsWith('Win')
+
 function ShellSideNav() {
+  const [isMaximized, setIsMaximized] = useState(false)
+
+  useEffect(() => {
+    if (!window.windowControls) return
+    window.windowControls.onMaximizedChange(setIsMaximized)
+  }, [])
+
+  const handleMinimize = useCallback(() => window.windowControls?.minimize(), [])
+  const handleMaximize = useCallback(() => window.windowControls?.maximize(), [])
+  const handleClose = useCallback(() => window.windowControls?.close(), [])
+
   return (
-    <AppShell
-      contentPadding={0}
-      sideNav={
-        <SideNav
-          collapsible
-          resizable={{defaultWidth: 300, minWidth: 220, maxWidth: 420}}
-          header={
-            <SideNavHeading
-              heading="MultiOp"
-              icon={<img src="/logo.svg" alt="MultiOp" className="w-7 h-7" />}
-              headingHref="#"
-            />
+    <>
+      <AppShell
+        contentPadding={0}
+        topNav={
+          <div className="w-full h-12 flex items-center justify-between px-4 app-shell-top-nav">
+            {
+              isWin && <div className="title-bar-controls">
+                <button className="title-bar-btn" onClick={handleMinimize} aria-label="Minimize">
+                  <MinusIcon className="size-3.5" />
+                </button>
+                <button className="title-bar-btn" onClick={handleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
+                  <Square2StackIcon className="size-3.5" />
+                </button>
+                <button className="title-bar-btn title-bar-close" onClick={handleClose} aria-label="Close">
+                  <XMarkIcon className="size-3.5" />
+                </button>
+              </div>
+            }
+          </div>
+        }
+        sideNav={
+          <SideNav
+            collapsible
+            resizable={{defaultWidth: 300, minWidth: 220, maxWidth: 420}}
+            footer={
+              <SideNavSection title="Account" isHeaderHidden>
+                <SideNavItem label="Settings" icon={Cog6ToothIcon} href="#" />
+                <SideNavItem label="Sarah Chen" icon={UserCircleIcon} href="#" />
+              </SideNavSection>
+            }>
+            <SideNavSection title="Menu" isHeaderHidden>
+              <SideNavItem label="New chat" icon={PlusIcon} href="#" />
+              <SideNavItem label="Search" icon={MagnifyingGlassIcon} href="#" />
+              <SideNavItem label="Library" icon={BookOpenIcon} href="#" />
+            </SideNavSection>
+            <Divider />
+            <SideNavSection title="Workspaces" isHeaderHidden>
+              {WORKSPACES.map(workspace => (
+                <SideNavItem
+                  key={workspace.name}
+                  label={workspace.name}
+                  icon={workspace.icon}
+                  collapsible={{defaultIsCollapsed: false}}>
+                  <VStack gap={0.5}>
+                    {workspace.chats.map(chat => (
+                      <ConversationItem
+                        key={chat.label}
+                        label={chat.label}
+                        status={chat.status}
+                        statusLabel={chat.statusLabel}
+                        isSelected={chat.label === SELECTED_CHAT}
+                      />
+                    ))}
+                  </VStack>
+                </SideNavItem>
+              ))}
+            </SideNavSection>
+          </SideNav>
+        }>
+        <Layout
+          height="fill"
+          contentWidth={768}
+          content={
+            <LayoutContent padding={6}>
+              <VStack gap={5}>
+                {MESSAGES.map((message, mi) => (
+                  <HStack
+                    key={mi}
+                    hAlign={message.role === 'assistant' ? 'start' : 'end'}>
+                    <Card
+                      variant="muted"
+                      padding={0}
+                      width={message.width}
+                      height={message.height}
+                    />
+                  </HStack>
+                ))}
+              </VStack>
+            </LayoutContent>
           }
           footer={
-            <SideNavSection title="Account" isHeaderHidden>
-              <SideNavItem label="Settings" icon={Cog6ToothIcon} href="#" />
-              <SideNavItem label="Sarah Chen" icon={UserCircleIcon} href="#" />
-            </SideNavSection>
-          }>
-          <SideNavSection title="Menu" isHeaderHidden>
-            <SideNavItem label="New chat" icon={PlusIcon} href="#" />
-            <SideNavItem label="Search" icon={MagnifyingGlassIcon} href="#" />
-            <SideNavItem label="Library" icon={BookOpenIcon} href="#" />
-          </SideNavSection>
-          <Divider />
-          <SideNavSection title="Workspaces" isHeaderHidden>
-            {WORKSPACES.map(workspace => (
-              <SideNavItem
-                key={workspace.name}
-                label={workspace.name}
-                icon={workspace.icon}
-                collapsible={{defaultIsCollapsed: false}}>
-                <VStack gap={0.5}>
-                  {workspace.chats.map(chat => (
-                    <ConversationItem
-                      key={chat.label}
-                      label={chat.label}
-                      status={chat.status}
-                      statusLabel={chat.statusLabel}
-                      isSelected={chat.label === SELECTED_CHAT}
-                    />
-                  ))}
-                </VStack>
-              </SideNavItem>
-            ))}
-          </SideNavSection>
-        </SideNav>
-      }>
-      <Layout
-        height="fill"
-        contentWidth={768}
-        content={
-          <LayoutContent padding={6}>
-            <VStack gap={5}>
-              {MESSAGES.map((message, mi) => (
-                <HStack
-                  key={mi}
-                  hAlign={message.role === 'assistant' ? 'start' : 'end'}>
-                  <Card
-                    variant="muted"
-                    padding={0}
-                    width={message.width}
-                    height={message.height}
-                  />
-                </HStack>
-              ))}
-            </VStack>
-          </LayoutContent>
-        }
-        footer={
-          <LayoutFooter>
-            <Card variant="muted" padding={0} width="100%" height={56} />
-          </LayoutFooter>
-        }
-      />
-    </AppShell>
+            <LayoutFooter>
+              <Card variant="muted" padding={0} width="100%" height={56} />
+            </LayoutFooter>
+          }
+        />
+      </AppShell>
+    </>
   )
 }
 

@@ -73,4 +73,14 @@ const sessionAPI = {
       ipcRenderer.invoke('logger:log', { level, args, timestamp: Date.now() })
     },
   })
+
+  // ─── Window Controls (for frameless window) ──────────────────
+  contextBridge.exposeInMainWorld('windowControls', {
+    minimize: () => ipcRenderer.send('window:minimize'),
+    maximize: () => ipcRenderer.send('window:maximize'),
+    close: () => ipcRenderer.send('window:close'),
+    onMaximizedChange: (callback: (maximized: boolean) => void) => {
+      ipcRenderer.on('window:maximized-change', (_event, maximized) => callback(maximized))
+    },
+  })
 })()

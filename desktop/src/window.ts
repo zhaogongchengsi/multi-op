@@ -26,12 +26,22 @@ export async function createAppWindow(options: WindowOptions): Promise<BrowserWi
 
   logger.info('Creating Electron BrowserWindow...')
 
+  const isMac = process.platform === 'darwin'
+
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
     icon: iconPath,
     title: 'MultiOp',
     show: false,
+    ...(isMac
+      ? {
+          titleBarStyle: 'hidden',
+          trafficLightPosition: { x: 16, y: 16 },
+        }
+      : {
+          frame: false,
+        }),
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
