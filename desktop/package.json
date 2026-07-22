@@ -48,7 +48,10 @@
     "buildDependenciesFromSource": true,
     "mac": {
       "icon": "resources/icon.svg",
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
+      "hardenedRuntime": true
     },
     "win": {
       "icon": "resources/icon.svg"
