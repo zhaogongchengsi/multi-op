@@ -15,8 +15,23 @@ if (!gotSingleInstanceLock) {
   app.quit()
 }
 
+// Register custom protocol scheme BEFORE app ready (required by Electron)
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: SCHEME,
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      allowServiceWorkers: true,
+    },
+  },
+])
+logger.info('Protocol scheme registered', { scheme: SCHEME })
+
 // ========== Bootstrap ==========
-const router = createRouter()
+const router = createRouter(SCHEME, 'app')
 const lifecycle = new AppLifecycle()
 
 const preloadPath = join(__dirname, 'preload.mjs')
@@ -25,9 +40,11 @@ const iconPath = join(resourcesPath, 'icon.svg')
 
 // 生产环境静态文件服务
 if (import.meta.env.PROD) {
+  const clientDir = resolve(import.meta.dirname, './client')
+  logger.info('root:', clientDir)
   router.use(
     createStaticMiddleware({
-      root: resolve(import.meta.dirname, './client'),
+      root: clientDir,
       prefix: '/',
       ignorePaths: ['/api/**', '/trpc/**'],
     }),
@@ -36,22 +53,6 @@ if (import.meta.env.PROD) {
 
 const bootstrap = async () => {
   logger.info('===== App booting =====')
-
-  // Register custom protocol scheme
-  logger.info('Registering protocol scheme...')
-  protocol.registerSchemesAsPrivileged([
-    {
-      scheme: SCHEME,
-      privileges: {
-        standard: true,
-        secure: true,
-        supportFetchAPI: true,
-        corsEnabled: true,
-        allowServiceWorkers: true,
-      },
-    },
-  ])
-  logger.info('Protocol scheme registered', { scheme: SCHEME })
 
   // Initialize database (dev → cwd, prod → userData)
   logger.info('Initializing database...')
@@ -108,10 +109,11 @@ const bootstrap = async () => {
 
 // ========== Entry ==========
 logger.info('Waiting for Electron ready...')
-app.whenReady()
+app
+  .whenReady()
   .then(() => {
     logger.info('Electron app ready')
-    bootstrap()
+    return bootstrap()
   })
   .catch((err: unknown) => {
     logger.error('Bootstrap failed:', err)

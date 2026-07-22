@@ -1,21 +1,12 @@
-import { app, ipcMain } from 'electron'
+import { ipcMain } from 'electron'
 import { join } from 'node:path'
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { Logger, ConsoleTransport, FileTransport } from '@multi-op/logger'
 import type { LogLevel } from '@multi-op/logger'
-
-// ========== Crash Log ==========
-
-function getLogDir(): string {
-  try {
-    return join(app.getPath('home'), '.multi-op')
-  } catch {
-    return join(process.cwd(), '.multi-op')
-  }
-}
+import { workspace } from './constant';
 
 export function writeCrashLog(error: unknown) {
-  const dir = getLogDir()
+  const dir = workspace
   if (!existsSync(dir)) {
     try {
       mkdirSync(dir, { recursive: true })
@@ -28,14 +19,11 @@ export function writeCrashLog(error: unknown) {
   const message = error instanceof Error ? `${error.stack || error.message}` : String(error)
 
   const log = `[${timestamp}] FATAL: ${message}\n`
-  writeFileSync(join(dir, 'crash.log'), log, { flag: 'a' })
+  writeFileSync(join(workspace, 'crash.log'), log, { flag: 'a' })
 }
 
 // ========== Main Logger ==========
-
-const logDir = import.meta.env.DEV
-  ? join(process.cwd(), 'logs')
-  : join(app.getPath('userData'), 'logs')
+const logDir = join(workspace, 'logs')
 
 export const logger = new Logger({
   level: import.meta.env.DEV ? 'debug' : 'info',

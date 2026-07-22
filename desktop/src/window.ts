@@ -1,7 +1,6 @@
-import { BrowserWindow, protocol } from 'electron'
-import { join } from 'node:path'
-import type { Router } from '@holix/router'
-import { AppLifecycle, MainWindow } from '@multi-op/core'
+import { BrowserWindow } from 'electron'
+import type { HolixProtocolRouter } from '@holix/router'
+import { AppLifecycle } from '@multi-op/core'
 import { SCHEME } from '@multi-op/shared'
 import { logger } from './logger.js'
 
@@ -13,7 +12,7 @@ export interface WindowOptions {
   /** Application lifecycle manager */
   lifecycle: AppLifecycle
   /** Holix router for custom protocol handling */
-  router: Router
+  router: HolixProtocolRouter
 }
 
 /**
@@ -27,9 +26,11 @@ export async function createAppWindow(options: WindowOptions): Promise<BrowserWi
 
   logger.info('Creating Electron BrowserWindow...')
 
-  const mainWindow = new MainWindow()
-  const win = mainWindow.create({
+  const win = new BrowserWindow({
+    width: 1200,
+    height: 800,
     icon: iconPath,
+    title: 'MultiOp',
     show: false,
     webPreferences: {
       preload: preloadPath,
@@ -59,10 +60,9 @@ export async function createAppWindow(options: WindowOptions): Promise<BrowserWi
 
 // ─── Internal Helpers ─────────────────────────────────────────
 
-async function registerProtocol(win: BrowserWindow, router: Router): Promise<void> {
+async function registerProtocol(win: BrowserWindow, router: HolixProtocolRouter): Promise<void> {
   logger.info('Registering protocol handler with session...')
   await router.register(win.webContents.session.protocol)
-  await waitForProtocol(win)
   logger.info('Protocol handler registered')
 }
 
@@ -74,26 +74,7 @@ async function loadContent(win: BrowserWindow): Promise<void> {
   } else {
     const url = `${SCHEME}://app/`
     logger.info('Loading production URL:', url)
-    await win.loadURL(url)
+    win.loadURL(url)
     win.webContents.openDevTools()
   }
-}
-
-function waitForProtocol(win: BrowserWindow, timeout = 5000): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const start = Date.now()
-    const check = () => {
-      if (
-        win.webContents.session.protocol.isProtocolHandled(SCHEME) ||
-        protocol.isProtocolHandled(SCHEME)
-      ) {
-        resolve()
-      } else if (Date.now() - start > timeout) {
-        reject(new Error(`Protocol ${SCHEME} not registered within ${timeout}ms`))
-      } else {
-        setTimeout(check, 100)
-      }
-    }
-    check()
-  })
 }
