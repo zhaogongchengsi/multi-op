@@ -216,28 +216,23 @@ export function SidebarWorkspaces() {
           header={<DialogHeader title="New session" onOpenChange={setIsDialogOpen} />}
           content={
             <LayoutContent>
-              <VStack gap={1}>
+              <Stack direction="horizontal" gap={1} justify="center" wrap="nowrap">
                 {PLATFORMS.map(p => (
                   <Button
                     key={p}
                     label={PLATFORM_LABEL[p]}
-                    variant="ghost"
-                    width="100%"
+                    variant="secondary"
+                    isIconOnly
                     onClick={() => handleNewChat(p)}
                     icon={
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: PLATFORM_META[p].color,
-                        }}
-                      />
+                      (() => {
+                        const Icon = PLATFORM_ICONS[p] ?? ChatBubbleLeftEllipsisIcon
+                        return <Icon style={{ color: PLATFORM_META[p].color }} className="w-5 h-5" />
+                      })()
                     }
                   />
                 ))}
-              </VStack>
+              </Stack>
             </LayoutContent>
           }
         />
