@@ -11,6 +11,7 @@
     "@astryxdesign/cli": "^0.1.7",
     "@astryxdesign/core": "^0.1.7",
     "@astryxdesign/theme-neutral": "^0.1.7",
+    "@heroicons/react": "^2.2.0",
     "@multi-op/logger": "workspace:*",
     "@multi-op/shared": "workspace:*",
     "@stylexjs/stylex": "^0.19.0",

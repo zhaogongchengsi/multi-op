@@ -110,6 +110,9 @@ importers:
       '@astryxdesign/theme-neutral':
         specifier: ^0.1.7
         version: 0.1.7(@astryxdesign/core@0.1.7(@stylexjs/stylex@0.19.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
+      '@heroicons/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react@19.2.7)
       '@multi-op/logger':
         specifier: workspace:*
         version: link:../logger
@@ -950,6 +953,11 @@ packages:
 
   '@hapi/topo@6.0.2':
     resolution: {integrity: sha512-KR3rD5inZbGMrHmgPxsJ9dbi6zEK+C3ZwUwTa+eMwWLz7oijWUTWD2pMSNNYJAU6Qq+65NkxXjqHr/7LM2Xkqg==}
+
+  '@heroicons/react@2.2.0':
+    resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
+    peerDependencies:
+      react: '>= 16 || ^19.0.0-rc'
 
   '@holix/router@0.0.3':
     resolution: {integrity: sha512-PjWuFcbz1oL5r5LdvyEG1wjTHM4vuEAZqiUIbe5NhnR3j5x9+5hFpBD1I2fA8AjW3zUARUNsErRYq/RBH1u7og==}
@@ -4777,6 +4785,10 @@ snapshots:
   '@hapi/topo@6.0.2':
     dependencies:
       '@hapi/hoek': 11.0.7
+
+  '@heroicons/react@2.2.0(react@19.2.7)':
+    dependencies:
+      react: 19.2.7
 
   '@holix/router@0.0.3':
     dependencies:
