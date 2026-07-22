@@ -75,6 +75,5 @@ async function loadContent(win: BrowserWindow): Promise<void> {
     const url = `${SCHEME}://app/`
     logger.info('Loading production URL:', url)
     win.loadURL(url)
-    win.webContents.openDevTools()
   }
 }
