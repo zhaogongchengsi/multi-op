@@ -1,5 +1,5 @@
 import {useState, useEffect, useCallback} from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 import {AppShell} from '@astryxdesign/core/AppShell'
 import {Divider} from '@astryxdesign/core/Divider'
 import {Layout, LayoutContent, LayoutFooter} from '@astryxdesign/core/Layout'
@@ -176,7 +176,6 @@ function ShellSideNav() {
             <SideNavSection title="Menu" isHeaderHidden>
               <SideNavItem label="New chat" icon={PlusIcon} href="#" />
               <SideNavItem label="Search" icon={MagnifyingGlassIcon} href="#" />
-              <SideNavItem label="Library" icon={BookOpenIcon} href="#" />
             </SideNavSection>
             <Divider />
             <SideNavSection title="Workspaces" isHeaderHidden>
@@ -204,29 +203,10 @@ function ShellSideNav() {
         }>
         <Layout
           height="fill"
-          contentWidth={768}
           content={
-            <LayoutContent padding={6}>
-              <VStack gap={5}>
-                {MESSAGES.map((message, mi) => (
-                  <HStack
-                    key={mi}
-                    hAlign={message.role === 'assistant' ? 'start' : 'end'}>
-                    <Card
-                      variant="muted"
-                      padding={0}
-                      width={message.width}
-                      height={message.height}
-                    />
-                  </HStack>
-                ))}
-              </VStack>
+            <LayoutContent>
+              <Outlet />
             </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <Card variant="muted" padding={0} width="100%" height={56} />
-            </LayoutFooter>
           }
         />
       </AppShell>
