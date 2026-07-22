@@ -38,6 +38,9 @@ importers:
       '@multi-op/database':
         specifier: workspace:*
         version: link:../packages/database
+      '@multi-op/logger':
+        specifier: workspace:*
+        version: link:../packages/logger
       '@multi-op/shared':
         specifier: workspace:*
         version: link:../packages/shared
@@ -81,8 +84,20 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
+  packages/logger:
+    devDependencies:
+      electron:
+        specifier: ^43.1.1
+        version: 43.1.1
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+
   packages/renderer:
     dependencies:
+      '@multi-op/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@multi-op/shared':
         specifier: workspace:*
         version: link:../shared
