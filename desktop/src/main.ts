@@ -47,7 +47,23 @@ if (import.meta.env.PROD) {
   )
 }
 
-function createMainWindow() {
+function waitForProtocol(scheme: string, timeout = 5000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now()
+    const check = () => {
+      if (protocol.isProtocolHandled(scheme)) {
+        resolve()
+      } else if (Date.now() - start > timeout) {
+        reject(new Error(`Protocol ${scheme} not registered within ${timeout}ms`))
+      } else {
+        setTimeout(check, 100)
+      }
+    }
+    check()
+  })
+}
+
+async function createMainWindow() {
   const win = mainWindow.create({
     icon: iconDesktop,
     webPreferences: {
@@ -58,7 +74,8 @@ function createMainWindow() {
   })
 
   if (win && !protocolRegistered) {
-    router.register(win.webContents.session.protocol)
+    await waitForProtocol(SCHEME)
+    await router.register(win.webContents.session.protocol)
     protocolRegistered = true
   }
 
@@ -70,14 +87,14 @@ function createMainWindow() {
     win.loadURL('http://localhost:4173')
     win.webContents.openDevTools()
   } else {
-    const rendererPath = join(process.resourcesPath, 'renderer', 'index.html')
-    win.loadFile(rendererPath)
+    await win.loadURL(`${SCHEME}://app/'`)
+    win.webContents.openDevTools()
   }
 
   return win
 }
 
-const bootstrap = () => {
+const bootstrap = async () => {
   // Initialize database (dev → cwd, prod → userData)
   bootstrapDatabase()
 
@@ -85,7 +102,7 @@ const bootstrap = () => {
   lifecycle.start()
 
   // Create main window
-  createMainWindow()
+  await createMainWindow()
 
   // macOS: re-create window on activate
   app.on('activate', () => {
