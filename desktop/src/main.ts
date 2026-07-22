@@ -14,27 +14,20 @@ if (!gotSingleInstanceLock) {
   app.quit()
 }
 
-let protocolRegistered = false
-
-// ========== Protocol Scheme Registration ==========
-function registerSchemesAsPrivileged() {
-  if (protocolRegistered) {
-    return
-  }
-  protocol.registerSchemesAsPrivileged([
-    {
-      scheme: SCHEME,
-      privileges: {
-        standard: true,
-        secure: true,
-        supportFetchAPI: true,
-        corsEnabled: true,
-        allowServiceWorkers: true,
-      },
+// ========== Protocol Scheme Registration (must be before app.whenReady) ==========
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: SCHEME,
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      allowServiceWorkers: true,
     },
-  ])
-  protocolRegistered = true
-}
+  },
+])
+let protocolHandled = false
 
 // ========== Bootstrap ==========
 const router = createRouter()
@@ -88,11 +81,11 @@ async function createMainWindow() {
     })
   }
 
-  if (win && !protocolRegistered) {
+  if (win && !protocolHandled) {
     logger.info('Registering protocol handler with session...')
     await router.register(win.webContents.session.protocol)
     await waitForProtocol()
-    protocolRegistered = true
+    protocolHandled = true
     logger.info('Protocol handler registered')
   }
 
@@ -123,10 +116,8 @@ async function createMainWindow() {
 const bootstrap = async () => {
   logger.info('===== App booting =====')
 
-  // Register custom protocol scheme
-  logger.info('Registering protocol scheme...')
-  registerSchemesAsPrivileged()
-  logger.info('Protocol scheme registered', { scheme: SCHEME })
+  // Protocol scheme was registered before app.whenReady
+  logger.info('Protocol scheme ready', { scheme: SCHEME })
 
   // Initialize database (dev → cwd, prod → userData)
   logger.info('Initializing database...')
