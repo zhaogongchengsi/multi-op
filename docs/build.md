@@ -55,8 +55,10 @@ app.asar/
         *.css
       ...
 resources/
-  drizzle/                     ← 数据库迁移文件（只读参考）
-```
+drizzle/                     ← 数据库迁移文件（extraResources 打包到此处）
+...
+
+首次启动时，`resources/drizzle/` 自动复制到 `userData/.multi-op/drizzle/`（可写目录），drizzle migrator 在此处执行读写。
 
 - **dev 模式**: `window.loadURL('http://localhost:4173')` 加载 vite 预览服务器
 - **prod 模式**: `window.loadFile()` + 静态中间件从 `dist/client/` 提供服务

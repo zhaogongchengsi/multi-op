@@ -7,19 +7,7 @@ import { bootstrapDatabase } from './database.js'
 import { createRouter } from '@holix/router'
 import { createStaticMiddleware } from '@holix/static'
 import { SCHEME } from '@multi-op/shared'
-
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: SCHEME,
-    privileges: {
-      standard: true,
-      secure: true,
-      supportFetchAPI: true,
-      corsEnabled: true,
-      allowServiceWorkers: true,
-    },
-  },
-])
+import { writeCrashLog } from './logger.js'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -48,6 +36,27 @@ ipcMain.handle('logger:log', (_event, entry: { level: LogLevel; args: unknown[];
   logger.child({ source: 'renderer' }).info(...entry.args)
 })
 
+const registerSchemesAsPrivileged = async () => {
+  if (protocolRegistered) {
+    return
+  }
+  protocol.registerSchemesAsPrivileged([
+   {
+     scheme: SCHEME,
+     privileges: {
+       standard: true,
+       secure: true,
+       supportFetchAPI: true,
+       corsEnabled: true,
+       allowServiceWorkers: true,
+     },
+   },
+  ])
+  protocolRegistered = true
+}
+
+registerSchemesAsPrivileged()
+
 // ========== Bootstrap ==========
 const router = createRouter()
 const lifecycle = new AppLifecycle()
@@ -68,9 +77,10 @@ if (import.meta.env.PROD) {
   )
 }
 
-function createMainWindow() {
+async function createMainWindow() {
   const win = mainWindow.create({
     icon: iconDesktop,
+    show: false,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
@@ -78,8 +88,28 @@ function createMainWindow() {
     },
   })
 
+  function waitForProtocol(timeout = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const start = Date.now()
+      const check = () => {
+        if (
+          win.webContents.session.protocol.isProtocolHandled(SCHEME) ||
+          protocol.isProtocolHandled(SCHEME)
+        ) {
+          resolve()
+        } else if (Date.now() - start > timeout) {
+          reject(new Error(`Protocol ${SCHEME} not registered within ${timeout}ms`))
+        } else {
+          setTimeout(check, 100)
+        }
+      }
+      check()
+    })
+  }
+
   if (win && !protocolRegistered) {
-    router.register(win.webContents.session.protocol)
+    await router.register(win.webContents.session.protocol)
+    await waitForProtocol()
     protocolRegistered = true
   }
 
@@ -91,14 +121,18 @@ function createMainWindow() {
     win.loadURL('http://localhost:4173')
     win.webContents.openDevTools()
   } else {
-    const rendererPath = join(process.resourcesPath, 'renderer', 'index.html')
-    win.loadFile(rendererPath)
+    await win.loadURL(`${SCHEME}://app/'`)
+    win.webContents.openDevTools()
   }
+
+  win.once('ready-to-show', () => {
+    win.show()
+  })
 
   return win
 }
 
-const bootstrap = () => {
+const bootstrap = async () => {
   logger.info('App booting...')
 
   // Initialize database (dev → cwd, prod → userData)
@@ -108,7 +142,7 @@ const bootstrap = () => {
   lifecycle.start()
 
   // Create main window
-  createMainWindow()
+  await createMainWindow()
 
   // macOS: re-create window on activate
   app.on('activate', () => {
@@ -134,18 +168,19 @@ const bootstrap = () => {
 }
 
 // ========== Entry ==========
-app
-  .whenReady()
-  .then(bootstrap)
-  .catch((err: unknown) => {
-    logger.error('Bootstrap failed:', err)
-    process.exit(1)
-  })
+registerSchemesAsPrivileged().then(() => app.whenReady()).then(bootstrap)
+.catch((err: unknown) => {
+  logger.error('Bootstrap failed:', err)
+  if (import.meta.env.PROD) writeCrashLog(err)
+  process.exit(1)
+})
 
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error)
+  if (import.meta.env.PROD) writeCrashLog(error)
 })
 
 process.on('unhandledRejection', (reason) => {
   logger.warn('Unhandled Rejection:', reason)
+  if (import.meta.env.PROD) writeCrashLog(reason)
 })

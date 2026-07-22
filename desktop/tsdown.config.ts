@@ -11,6 +11,7 @@ export default defineConfig({
   platform: 'node',
   dts: false,
   sourcemap: true,
+  shims: true,
   define: {
     'import.meta.env.DEV': JSON.stringify(!isProd),
     'import.meta.env.PROD': JSON.stringify(isProd),
