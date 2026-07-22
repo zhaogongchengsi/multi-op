@@ -3,6 +3,8 @@ import {useNavigate} from '@tanstack/react-router'
 import {
   PlusIcon,
   MagnifyingGlassIcon,
+  FolderPlusIcon,
+  FolderIcon,
   PaperAirplaneIcon,
   ChatBubbleLeftRightIcon,
   HashtagIcon,
@@ -18,6 +20,7 @@ import {StatusDot} from '@astryxdesign/core/StatusDot'
 import type {StatusDotVariant} from '@astryxdesign/core/StatusDot'
 import {Stack, VStack} from '@astryxdesign/core/Stack'
 import {Dialog, DialogHeader} from '@astryxdesign/core/Dialog'
+import {TextInput} from '@astryxdesign/core/TextInput'
 import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
 import {Button} from '@astryxdesign/core/Button'
 import {PLATFORMS, PLATFORM_LABEL, PLATFORM_META} from '@multi-op/shared'
@@ -63,48 +66,152 @@ function ConversationItem({
   chat,
   isSelected,
   onSelect,
-  onRename,
-  onDelete,
 }: {
   chat: Chat
   isSelected: boolean
   onSelect: () => void
-  onRename: (title: string) => void
-  onDelete: () => void
 }) {
   const [isHovered, setIsHovered] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isRenameOpen, setIsRenameOpen] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
+  const [isGroupOpen, setIsGroupOpen] = useState(false)
+  const [newGroupName, setNewGroupName] = useState('')
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
+  const { state, renameChat, deleteChat, createWorkspace, moveChat } = useWorkspaces()
   const showMenu = isHovered || isMenuOpen
+  const realGroups = state.workspaces.filter(w => w.id !== -1)
+
+  const handleRename = () => {
+    setRenameValue(chat.title)
+    setIsRenameOpen(true)
+  }
+
+  const handleRenameConfirm = () => {
+    if (renameValue.trim()) {
+      renameChat(chat.id, renameValue.trim())
+    }
+    setIsRenameOpen(false)
+  }
+
+  const handleMoveGroup = (groupId: number | null) => {
+    moveChat(chat.id, groupId)
+    setIsGroupOpen(false)
+  }
+
+  const handleCreateAndMove = async () => {
+    if (!newGroupName.trim()) return
+    setIsCreatingGroup(true)
+    try {
+      const newId = await createWorkspace(newGroupName.trim())
+      moveChat(chat.id, newId)
+    } finally {
+      setIsCreatingGroup(false)
+      setNewGroupName('')
+      setIsGroupOpen(false)
+    }
+  }
 
   return (
-    <Stack
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}>
-      <SideNavItem
-        label={chat.title}
-        href="#"
-        isSelected={isSelected}
-        onClick={onSelect}
-        icon={<PlatformIcon platform={chat.platform} />}
-        endContent={
-          showMenu ? (
-            <MoreMenu
-              size="sm"
-              label="Conversation options"
-              onOpenChange={setIsMenuOpen}
-              items={[
-                {label: 'Pin', onClick: () => {}},
-                {label: 'Rename', onClick: () => onRename(chat.title)},
-                {label: 'Archive', onClick: () => {}},
-                {label: 'Delete', onClick: onDelete},
-              ]}
-            />
-          ) : (
-            <StatusDot variant={statusVariant(chat.status)} label={chat.status} />
-          )
-        }
-      />
-    </Stack>
+    <>
+      <Stack
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}>
+        <SideNavItem
+          label={chat.title}
+          href="#"
+          isSelected={isSelected}
+          onClick={onSelect}
+          icon={<PlatformIcon platform={chat.platform} />}
+          endContent={
+            showMenu ? (
+              <MoreMenu
+                size="sm"
+                label="Conversation options"
+                onOpenChange={setIsMenuOpen}
+                items={[
+                  {label: 'Pin', onClick: () => {}},
+                  {label: 'Rename', onClick: handleRename},
+                  {label: 'Move to group', onClick: () => setIsGroupOpen(true)},
+                  {label: 'Archive', onClick: () => {}},
+                  {label: 'Delete', onClick: () => deleteChat(chat.id)},
+                ]}
+              />
+            ) : (
+              <StatusDot variant={statusVariant(chat.status)} label={chat.status} />
+            )
+          }
+        />
+      </Stack>
+
+      {/* Rename dialog */}
+      <Dialog isOpen={isRenameOpen} onOpenChange={setIsRenameOpen} width={320}>
+        <Layout
+          header={<DialogHeader title="Rename conversation" onOpenChange={setIsRenameOpen} />}
+          content={
+            <LayoutContent>
+              <Stack gap={1}>
+                <TextInput
+                  label="Name"
+                  isLabelHidden
+                  placeholder="Conversation name"
+                  value={renameValue}
+                  onChange={setRenameValue}
+                  onEnter={handleRenameConfirm}
+                  hasAutoFocus
+                />
+                <Button label="Save" variant="primary" width="100%" onClick={handleRenameConfirm} />
+              </Stack>
+            </LayoutContent>
+          }
+        />
+      </Dialog>
+
+      {/* Move to group dialog */}
+      <Dialog isOpen={isGroupOpen} onOpenChange={setIsGroupOpen} width={320}>
+        <Layout
+          header={<DialogHeader title="Move to group" onOpenChange={setIsGroupOpen} />}
+          content={
+            <LayoutContent>
+              <Stack gap={0.5}>
+                <Button
+                  label="Ungrouped"
+                  variant="ghost"
+                  width="100%"
+                  onClick={() => handleMoveGroup(null)}
+                />
+                {realGroups.map(g => (
+                  <Button
+                    key={g.id}
+                    label={g.name}
+                    variant="ghost"
+                    width="100%"
+                    onClick={() => handleMoveGroup(g.id)}
+                  />
+                ))}
+                <div className="border-t border-gray-200 my-2" />
+                <TextInput
+                  label="New group name"
+                  isLabelHidden
+                  placeholder="New group name"
+                  value={newGroupName}
+                  onChange={setNewGroupName}
+                  onEnter={handleCreateAndMove}
+                />
+                <Button
+                  label="Create & move"
+                  variant="secondary"
+                  width="100%"
+                  onClick={handleCreateAndMove}
+                  isLoading={isCreatingGroup}
+                  isDisabled={!newGroupName.trim()}
+                />
+              </Stack>
+            </LayoutContent>
+          }
+        />
+      </Dialog>
+    </>
   )
 }
 
@@ -113,19 +220,16 @@ function WorkspaceGroup({
   workspace,
   selectedChatId,
   onSelectChat,
-  onRenameChat,
-  onDeleteChat,
 }: {
   workspace: Workspace
   selectedChatId: number | null
   onSelectChat: (id: number) => void
-  onRenameChat: (id: number, title: string) => void
-  onDeleteChat: (id: number) => void
 }) {
   return (
     <SideNavItem
       key={workspace.name}
       label={workspace.name}
+      icon={FolderIcon}
       collapsible={{defaultIsCollapsed: false}}>
       <VStack gap={0.5}>
         {workspace.chats.map(chat => (
@@ -134,8 +238,6 @@ function WorkspaceGroup({
             chat={chat}
             isSelected={chat.id === selectedChatId}
             onSelect={() => onSelectChat(chat.id)}
-            onRename={(title) => onRenameChat(chat.id, title)}
-            onDelete={() => onDeleteChat(chat.id)}
           />
         ))}
       </VStack>
@@ -146,11 +248,15 @@ function WorkspaceGroup({
 // ─── Top-level Sidebar Workspaces List ───────────────────────────
 export function SidebarWorkspaces() {
   const navigate = useNavigate()
-  const {state, selectChat, createChat, renameChat, deleteChat} = useWorkspaces()
+  const {state, selectChat, createChat, createWorkspace, moveChat} = useWorkspaces()
   const {workspaces, selectedChatId} = state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
+  const [groupName, setGroupName] = useState('')
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
 
-  const hasRealGroups = workspaces.some(ws => ws.id !== -1)
+  const realGroups = workspaces.filter(ws => ws.id !== -1)
+  const ungrouped = workspaces.find(ws => ws.id === -1)?.chats ?? []
 
   const handleSelectChat = (chatId: number) => {
     selectChat(chatId)
@@ -166,6 +272,20 @@ export function SidebarWorkspaces() {
     setIsDialogOpen(false)
   }
 
+  const handleCreateGroup = async () => {
+    if (!groupName.trim() || isCreatingGroup) return
+    setIsCreatingGroup(true)
+    try {
+      await createWorkspace(groupName.trim())
+      setGroupName('')
+      setIsGroupDialogOpen(false)
+    } catch {
+      // error handled by store
+    } finally {
+      setIsCreatingGroup(false)
+    }
+  }
+
   return (
     <>
       <SideNavSection title="Menu" isHeaderHidden>
@@ -179,32 +299,34 @@ export function SidebarWorkspaces() {
           }}
         />
         <SideNavItem label="Search" icon={MagnifyingGlassIcon} href="#" />
+        <SideNavItem
+          label="New group"
+          icon={FolderPlusIcon}
+          href="#"
+          onClick={(e: React.MouseEvent) => {
+            e.preventDefault()
+            setIsGroupDialogOpen(true)
+          }}
+        />
       </SideNavSection>
       <Divider />
       <SideNavSection title="Workspaces" isHeaderHidden>
-        {hasRealGroups ? (
-          workspaces
-            .filter(ws => ws.id !== -1 || ws.chats.length > 0)
-            .map(ws => (
-              <WorkspaceGroup
-                key={ws.id}
-                workspace={ws}
-                selectedChatId={selectedChatId}
-                onSelectChat={handleSelectChat}
-                onRenameChat={renameChat}
-                onDeleteChat={deleteChat}
-              />
-            ))
-        ) : (
+        {realGroups.map(ws => (
+          <WorkspaceGroup
+            key={ws.id}
+            workspace={ws}
+            selectedChatId={selectedChatId}
+            onSelectChat={handleSelectChat}
+          />
+        ))}
+        {ungrouped.length > 0 && (
           <VStack gap={0.5}>
-            {workspaces.flatMap(ws => ws.chats).map(chat => (
+            {ungrouped.map(chat => (
               <ConversationItem
                 key={chat.id}
                 chat={chat}
                 isSelected={chat.id === selectedChatId}
                 onSelect={() => handleSelectChat(chat.id)}
-                onRename={(title) => renameChat(chat.id, title)}
-                onDelete={() => deleteChat(chat.id)}
               />
             ))}
           </VStack>
@@ -232,6 +354,36 @@ export function SidebarWorkspaces() {
                     }
                   />
                 ))}
+              </Stack>
+            </LayoutContent>
+          }
+        />
+      </Dialog>
+
+      {/* New group dialog */}
+      <Dialog isOpen={isGroupDialogOpen} onOpenChange={setIsGroupDialogOpen} width={360}>
+        <Layout
+          header={<DialogHeader title="New group" onOpenChange={setIsGroupDialogOpen} />}
+          content={
+            <LayoutContent>
+              <Stack gap={1}>
+                <TextInput
+                  label="Group name"
+                  isLabelHidden
+                  placeholder="Group name"
+                  value={groupName}
+                  onChange={setGroupName}
+                  onEnter={handleCreateGroup}
+                  hasAutoFocus
+                />
+                <Button
+                  label="Create"
+                  variant="primary"
+                  width="100%"
+                  onClick={handleCreateGroup}
+                  isLoading={isCreatingGroup}
+                  isDisabled={!groupName.trim()}
+                />
               </Stack>
             </LayoutContent>
           }

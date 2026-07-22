@@ -38,6 +38,7 @@ type WorkspaceAction =
   | { type: 'UPDATE_CHAT'; payload: { id: number; title: string } }
   | { type: 'DELETE_CHAT'; payload: number }
   | { type: 'SET_CHATS'; payload: { groupId: number | null; chats: Chat[] } }
+  | { type: 'MOVE_CHAT'; payload: { chatId: number; toGroupId: number | null; fromGroupId: number | null } }
 
 function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState {
   switch (action.type) {
@@ -113,6 +114,43 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
             : w,
         ),
       }
+    case 'MOVE_CHAT': {
+      const { chatId, toGroupId } = action.payload
+      // Find the chat across all workspaces
+      let movedChat: Chat | undefined
+      const workspacesAfterRemove = state.workspaces.map(w => {
+        const filtered = w.chats.filter(c => c.id !== chatId)
+        if (filtered.length !== w.chats.length) {
+          movedChat = w.chats.find(c => c.id === chatId)
+        }
+        return { ...w, chats: filtered }
+      })
+
+      if (!movedChat) return state
+
+      const updatedChat = { ...movedChat, groupId: toGroupId }
+      const targetId = toGroupId ?? -1
+      const targetExists = workspacesAfterRemove.some(w => w.id === targetId)
+
+      if (!targetExists) {
+        return {
+          ...state,
+          workspaces: [
+            { id: -1, name: 'Ungrouped', parentId: null, chats: [updatedChat] },
+            ...workspacesAfterRemove,
+          ],
+        }
+      }
+
+      return {
+        ...state,
+        workspaces: workspacesAfterRemove.map(w =>
+          w.id === targetId
+            ? { ...w, chats: [...w.chats, updatedChat] }
+            : w,
+        ),
+      }
+    }
     default:
       return state
   }
@@ -126,7 +164,7 @@ interface WorkspaceContextValue {
   /** Select a chat */
   selectChat: (chatId: number | null) => void
   /** Create a new workspace (group) */
-  createWorkspace: (name: string, parentId?: number | null) => Promise<void>
+  createWorkspace: (name: string, parentId?: number | null) => Promise<number>
   /** Rename a workspace */
   renameWorkspace: (id: number, name: string) => Promise<void>
   /** Delete a workspace */
@@ -137,6 +175,8 @@ interface WorkspaceContextValue {
   renameChat: (id: number, title: string) => Promise<void>
   /** Delete a chat */
   deleteChat: (id: number) => Promise<void>
+  /** Move a chat to a different group (null = ungrouped) */
+  moveChat: (chatId: number, toGroupId: number | null) => Promise<void>
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
@@ -218,7 +258,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SELECTED_CHAT', payload: chatId })
   }, [])
 
-  const createWorkspace = useCallback(async (name: string, parentId: number | null = null) => {
+  const createWorkspace = useCallback(async (name: string, parentId: number | null = null): Promise<number> => {
     try {
       const res = await window.bridge.services.group.create({ name, parentId })
       const g = res.data
@@ -229,8 +269,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         chats: [],
       }
       dispatch({ type: 'ADD_WORKSPACE', payload: ws })
+      return g.id
     } catch (e) {
       dispatch({ type: 'SET_ERROR', payload: String(e) })
+      throw e
     }
   }, [])
 
@@ -292,6 +334,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const moveChat = useCallback(async (chatId: number, toGroupId: number | null) => {
+    try {
+      // Find current groupId for the optimistic update
+      let fromGroupId: number | null = null
+      for (const ws of state.workspaces) {
+        const found = ws.chats.find(c => c.id === chatId)
+        if (found) {
+          fromGroupId = found.groupId
+          break
+        }
+      }
+      await window.bridge.services.session.update(chatId, { groupId: toGroupId })
+      dispatch({ type: 'MOVE_CHAT', payload: { chatId, toGroupId, fromGroupId } })
+    } catch (e) {
+      dispatch({ type: 'SET_ERROR', payload: String(e) })
+    }
+  }, [state.workspaces])
+
   // Load on mount
   useEffect(() => {
     if (window.bridge) {
@@ -311,6 +371,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         createChat,
         renameChat,
         deleteChat,
+        moveChat,
       }}
     >
       {children}
