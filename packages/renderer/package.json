@@ -8,15 +8,24 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@astryxdesign/cli": "^0.1.7",
+    "@astryxdesign/core": "^0.1.7",
+    "@astryxdesign/theme-neutral": "^0.1.7",
     "@multi-op/logger": "workspace:*",
     "@multi-op/shared": "workspace:*",
+    "@stylexjs/stylex": "^0.19.0",
+    "@tanstack/react-router": "^1.170.18",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@stylexjs/unplugin": "^0.19.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/router-plugin": "^1.168.23",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.1.5"
   }

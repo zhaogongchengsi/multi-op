@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+@import '@astryxdesign/core/reset.css' layer(reset);
+@import '@astryxdesign/core/astryx.css' layer(astryx-base);
+@import '@astryxdesign/theme-neutral/theme.css' layer(astryx-base);
