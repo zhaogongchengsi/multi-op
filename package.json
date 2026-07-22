@@ -9,7 +9,7 @@
     "dev:renderer": "cd packages/renderer && npx vite",
     "dev:desktop": "cd desktop && tsdown && electron .",
     "build": "NODE_ENV=production pnpm build:libs && NODE_ENV=production pnpm build:renderer && rm -rf desktop/dist/client && cp -r packages/renderer/dist desktop/dist/client",
-    "build:libs": "NODE_ENV=production tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/desktop",
+    "build:libs": "NODE_ENV=production tsdown -W -F @multi-op/shared -F @multi-op/core -F @multi-op/database -F @multi-op/logger -F @multi-op/desktop",
     "build:renderer": "cd packages/renderer && npx vite build",
     "package": "cd desktop && pnpm dist",
     "lint": "turbo lint",

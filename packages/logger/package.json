@@ -1,0 +1,22 @@
+{
+  "name": "@multi-op/logger",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --no-workspace",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "typescript": "^7.0.2"
+  }
+}

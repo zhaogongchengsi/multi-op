@@ -18,6 +18,7 @@
     "@holix/static": "^0.0.6",
     "@multi-op/core": "workspace:*",
     "@multi-op/database": "workspace:*",
+    "@multi-op/logger": "workspace:*",
     "@multi-op/shared": "workspace:*"
   },
   "devDependencies": {

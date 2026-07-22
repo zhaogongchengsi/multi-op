@@ -5,6 +5,7 @@ export default defineConfig({
     'packages/shared',
     'packages/core',
     'packages/database',
+    'packages/logger',
     'desktop',
   ],
   entry: ['src/index.ts'],

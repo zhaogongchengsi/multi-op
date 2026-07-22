@@ -1,13 +1,13 @@
-import { app, BrowserWindow, protocol } from 'electron'
+import { app, BrowserWindow, ipcMain, protocol } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle, MainWindow } from '@multi-op/core'
+import { Logger, ConsoleTransport, FileTransport } from '@multi-op/logger'
+import type { LogLevel, LogEntry } from '@multi-op/logger'
 import { bootstrapDatabase } from './database.js'
 import { createRouter } from '@holix/router'
 import { createStaticMiddleware } from '@holix/static'
 import { SCHEME } from '@multi-op/shared'
 import { writeCrashLog } from './logger.js'
-
-
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -17,6 +17,24 @@ if (!gotSingleInstanceLock) {
 }
 
 let protocolRegistered = false
+// ========== Logger ==========
+const logDir = import.meta.env.DEV
+  ? join(process.cwd(), 'logs')
+  : join(app.getPath('userData'), 'logs')
+
+export const logger = new Logger({
+  level: import.meta.env.DEV ? 'debug' : 'info',
+  source: 'main',
+  transports: [
+    new ConsoleTransport(),
+    new FileTransport({ dir: logDir }),
+  ],
+})
+
+// Listen for renderer logs
+ipcMain.handle('logger:log', (_event, entry: { level: LogLevel; args: unknown[]; timestamp: number }) => {
+  logger.child({ source: 'renderer' }).info(...entry.args)
+})
 
 const registerSchemesAsPrivileged = async () => {
   if (protocolRegistered) {
@@ -38,7 +56,6 @@ const registerSchemesAsPrivileged = async () => {
 }
 
 registerSchemesAsPrivileged()
-
 
 // ========== Bootstrap ==========
 const router = createRouter()
@@ -116,6 +133,8 @@ async function createMainWindow() {
 }
 
 const bootstrap = async () => {
+  logger.info('App booting...')
+
   // Initialize database (dev → cwd, prod → userData)
   bootstrapDatabase()
 
@@ -128,6 +147,7 @@ const bootstrap = async () => {
   // macOS: re-create window on activate
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
+      logger.info('Re-creating main window on activate')
       createMainWindow()
     }
   })
@@ -135,12 +155,14 @@ const bootstrap = async () => {
   // Quit when all windows closed (non-macOS)
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+      logger.info('All windows closed, quitting app')
       app.quit()
     }
   })
 
   // Cleanup on quit
   app.on('before-quit', () => {
+    logger.info('App quitting...')
     lifecycle.stop()
   })
 }
@@ -148,17 +170,17 @@ const bootstrap = async () => {
 // ========== Entry ==========
 registerSchemesAsPrivileged().then(() => app.whenReady()).then(bootstrap)
 .catch((err: unknown) => {
-  console.error('[MultiOp] Bootstrap failed:', err)
+  logger.error('Bootstrap failed:', err)
   if (import.meta.env.PROD) writeCrashLog(err)
   process.exit(1)
 })
 
 process.on('uncaughtException', (error) => {
-  console.log('[Main] Uncaught Exception:', error)
+  logger.error('Uncaught Exception:', error)
   if (import.meta.env.PROD) writeCrashLog(error)
 })
 
 process.on('unhandledRejection', (reason) => {
-  console.log('[Main] Unhandled Rejection:', reason)
+  logger.warn('Unhandled Rejection:', reason)
   if (import.meta.env.PROD) writeCrashLog(reason)
 })

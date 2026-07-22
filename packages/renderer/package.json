@@ -8,6 +8,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@multi-op/logger": "workspace:*",
     "@multi-op/shared": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
