@@ -3,6 +3,10 @@ import {useNavigate} from '@tanstack/react-router'
 import {
   PlusIcon,
   MagnifyingGlassIcon,
+  PaperAirplaneIcon,
+  ChatBubbleLeftRightIcon,
+  HashtagIcon,
+  ChatBubbleLeftEllipsisIcon,
 } from '@heroicons/react/24/outline'
 import {Divider} from '@astryxdesign/core/Divider'
 import {
@@ -19,6 +23,24 @@ import {Button} from '@astryxdesign/core/Button'
 import {PLATFORMS, PLATFORM_LABEL, PLATFORM_META} from '@multi-op/shared'
 import {useWorkspaces} from '../stores/workspace'
 import type {Workspace, Chat, ChatStatus} from '../stores/workspace'
+
+// ─── Platform icon ────────────────────────────────────────────────
+const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'svg'>>> = {
+  telegram: PaperAirplaneIcon,
+  whatsapp: ChatBubbleLeftRightIcon,
+  twitter: HashtagIcon,
+}
+
+function PlatformIcon({ platform }: { platform: string }) {
+  const Icon = PLATFORM_ICONS[platform] ?? ChatBubbleLeftEllipsisIcon
+  const meta = PLATFORM_META[platform as keyof typeof PLATFORM_META]
+  return (
+    <Icon
+      style={{ color: meta?.color }}
+      className="w-4 h-4 shrink-0"
+    />
+  )
+}
 
 // ─── Status dot variant mapping ──────────────────────────────────
 function statusVariant(status: ChatStatus): StatusDotVariant {
@@ -63,6 +85,7 @@ function ConversationItem({
         href="#"
         isSelected={isSelected}
         onClick={onSelect}
+        icon={<PlatformIcon platform={chat.platform} />}
         endContent={
           showMenu ? (
             <MoreMenu

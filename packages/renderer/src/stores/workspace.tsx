@@ -7,6 +7,7 @@ export interface Chat {
   id: number
   title: string
   status: ChatStatus
+  platform: string
   groupId: number | null
 }
 
@@ -182,6 +183,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           id: s.id,
           title: s.title ?? 'Untitled',
           status: mapStatus(s.status),
+          platform: s.platform,
           groupId: s.groupId,
         })),
       }))
@@ -191,6 +193,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         id: s.id,
         title: s.title ?? 'Untitled',
         status: mapStatus(s.status),
+        platform: s.platform,
         groupId: s.groupId,
       }))
 
@@ -262,6 +265,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         id: s.id,
         title: s.title ?? 'Untitled',
         status: 'active',
+        platform: s.platform,
         groupId: s.groupId,
       }
       dispatch({ type: 'ADD_CHAT', payload: chat })
