@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import {useNavigate} from '@tanstack/react-router'
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -121,11 +122,17 @@ function WorkspaceGroup({
 
 // ─── Top-level Sidebar Workspaces List ───────────────────────────
 export function SidebarWorkspaces() {
+  const navigate = useNavigate()
   const {state, selectChat, createChat, renameChat, deleteChat} = useWorkspaces()
   const {workspaces, selectedChatId} = state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const hasRealGroups = workspaces.some(ws => ws.id !== -1)
+
+  const handleSelectChat = (chatId: number) => {
+    selectChat(chatId)
+    navigate({ to: '/chat/$chatId', params: { chatId: String(chatId) } })
+  }
 
   const handleNewChat = (platform: string) => {
     createChat(
@@ -160,7 +167,7 @@ export function SidebarWorkspaces() {
                 key={ws.id}
                 workspace={ws}
                 selectedChatId={selectedChatId}
-                onSelectChat={selectChat}
+                onSelectChat={handleSelectChat}
                 onRenameChat={renameChat}
                 onDeleteChat={deleteChat}
               />
@@ -172,7 +179,7 @@ export function SidebarWorkspaces() {
                 key={chat.id}
                 chat={chat}
                 isSelected={chat.id === selectedChatId}
-                onSelect={() => selectChat(chat.id)}
+                onSelect={() => handleSelectChat(chat.id)}
                 onRename={(title) => renameChat(chat.id, title)}
                 onDelete={() => deleteChat(chat.id)}
               />
