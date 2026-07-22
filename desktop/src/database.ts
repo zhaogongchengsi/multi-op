@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { existsSync, mkdirSync, cpSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { initDb, runMigrations } from '@multi-op/database'
 
 /**
