@@ -3,3 +3,8 @@
 @import '@astryxdesign/core/reset.css' layer(reset);
 @import '@astryxdesign/core/astryx.css' layer(astryx-base);
 @import '@astryxdesign/theme-neutral/theme.css' layer(astryx-base);
+
+/* 修复左侧导航横向滚动条问题 */
+.astryx-app-shell-sidenav {
+  overflow-x: hidden !important;
+}
