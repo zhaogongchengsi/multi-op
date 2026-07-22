@@ -7,18 +7,7 @@ import { createStaticMiddleware } from '@holix/static'
 import { SCHEME } from '@multi-op/shared'
 import { writeCrashLog } from './logger.js'
 
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: SCHEME,
-    privileges: {
-      standard: true,
-      secure: true,
-      supportFetchAPI: true,
-      corsEnabled: true,
-      allowServiceWorkers: true,
-    },
-  },
-])
+
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -28,6 +17,29 @@ if (!gotSingleInstanceLock) {
 }
 
 let protocolRegistered = false
+
+const registerSchemesAsPrivileged = async () => {
+  if (protocolRegistered) {
+    return
+  }
+  protocol.registerSchemesAsPrivileged([
+   {
+     scheme: SCHEME,
+     privileges: {
+       standard: true,
+       secure: true,
+       supportFetchAPI: true,
+       corsEnabled: true,
+       allowServiceWorkers: true,
+     },
+   },
+  ])
+  protocolRegistered = true
+}
+
+registerSchemesAsPrivileged()
+
+
 // ========== Bootstrap ==========
 const router = createRouter()
 const lifecycle = new AppLifecycle()
@@ -48,25 +60,10 @@ if (import.meta.env.PROD) {
   )
 }
 
-function waitForProtocol(scheme: string, timeout = 5000): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const start = Date.now()
-    const check = () => {
-      if (protocol.isProtocolHandled(scheme)) {
-        resolve()
-      } else if (Date.now() - start > timeout) {
-        reject(new Error(`Protocol ${scheme} not registered within ${timeout}ms`))
-      } else {
-        setTimeout(check, 100)
-      }
-    }
-    check()
-  })
-}
-
 async function createMainWindow() {
   const win = mainWindow.create({
     icon: iconDesktop,
+    show: false,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
@@ -74,9 +71,28 @@ async function createMainWindow() {
     },
   })
 
+  function waitForProtocol(timeout = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const start = Date.now()
+      const check = () => {
+        if (
+          win.webContents.session.protocol.isProtocolHandled(SCHEME) ||
+          protocol.isProtocolHandled(SCHEME)
+        ) {
+          resolve()
+        } else if (Date.now() - start > timeout) {
+          reject(new Error(`Protocol ${SCHEME} not registered within ${timeout}ms`))
+        } else {
+          setTimeout(check, 100)
+        }
+      }
+      check()
+    })
+  }
+
   if (win && !protocolRegistered) {
-    await waitForProtocol(SCHEME)
     await router.register(win.webContents.session.protocol)
+    await waitForProtocol()
     protocolRegistered = true
   }
 
@@ -91,6 +107,10 @@ async function createMainWindow() {
     await win.loadURL(`${SCHEME}://app/'`)
     win.webContents.openDevTools()
   }
+
+  win.once('ready-to-show', () => {
+    win.show()
+  })
 
   return win
 }
@@ -126,14 +146,12 @@ const bootstrap = async () => {
 }
 
 // ========== Entry ==========
-app
-  .whenReady()
-  .then(bootstrap)
-  .catch((err: unknown) => {
-    console.error('[MultiOp] Bootstrap failed:', err)
-    if (import.meta.env.PROD) writeCrashLog(err)
-    process.exit(1)
-  })
+registerSchemesAsPrivileged().then(() => app.whenReady()).then(bootstrap)
+.catch((err: unknown) => {
+  console.error('[MultiOp] Bootstrap failed:', err)
+  if (import.meta.env.PROD) writeCrashLog(err)
+  process.exit(1)
+})
 
 process.on('uncaughtException', (error) => {
   console.log('[Main] Uncaught Exception:', error)
