@@ -1,13 +1,11 @@
-import { app, BrowserWindow, ipcMain, protocol } from 'electron'
+import { app, BrowserWindow, protocol } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle, MainWindow } from '@multi-op/core'
-import { Logger, ConsoleTransport, FileTransport } from '@multi-op/logger'
-import type { LogLevel, LogEntry } from '@multi-op/logger'
 import { bootstrapDatabase } from './database.js'
 import { createRouter } from '@holix/router'
 import { createStaticMiddleware } from '@holix/static'
 import { SCHEME } from '@multi-op/shared'
-import { writeCrashLog } from './logger.js'
+import { logger, writeCrashLog } from './logger.js'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -17,45 +15,26 @@ if (!gotSingleInstanceLock) {
 }
 
 let protocolRegistered = false
-// ========== Logger ==========
-const logDir = import.meta.env.DEV
-  ? join(process.cwd(), 'logs')
-  : join(app.getPath('userData'), 'logs')
 
-export const logger = new Logger({
-  level: import.meta.env.DEV ? 'debug' : 'info',
-  source: 'main',
-  transports: [
-    new ConsoleTransport(),
-    new FileTransport({ dir: logDir }),
-  ],
-})
-
-// Listen for renderer logs
-ipcMain.handle('logger:log', (_event, entry: { level: LogLevel; args: unknown[]; timestamp: number }) => {
-  logger.child({ source: 'renderer' }).info(...entry.args)
-})
-
-const registerSchemesAsPrivileged = async () => {
+// ========== Protocol Scheme Registration ==========
+function registerSchemesAsPrivileged() {
   if (protocolRegistered) {
     return
   }
   protocol.registerSchemesAsPrivileged([
-   {
-     scheme: SCHEME,
-     privileges: {
-       standard: true,
-       secure: true,
-       supportFetchAPI: true,
-       corsEnabled: true,
-       allowServiceWorkers: true,
-     },
-   },
+    {
+      scheme: SCHEME,
+      privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true,
+        corsEnabled: true,
+        allowServiceWorkers: true,
+      },
+    },
   ])
   protocolRegistered = true
 }
-
-registerSchemesAsPrivileged()
 
 // ========== Bootstrap ==========
 const router = createRouter()
@@ -78,6 +57,7 @@ if (import.meta.env.PROD) {
 }
 
 async function createMainWindow() {
+  logger.info('Creating Electron BrowserWindow...')
   const win = mainWindow.create({
     icon: iconDesktop,
     show: false,
@@ -87,6 +67,7 @@ async function createMainWindow() {
       sandbox: false,
     },
   })
+  logger.info('BrowserWindow created')
 
   function waitForProtocol(timeout = 5000): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -108,24 +89,31 @@ async function createMainWindow() {
   }
 
   if (win && !protocolRegistered) {
+    logger.info('Registering protocol handler with session...')
     await router.register(win.webContents.session.protocol)
     await waitForProtocol()
     protocolRegistered = true
+    logger.info('Protocol handler registered')
   }
 
   win.on('closed', () => {
+    logger.info('Window closed, stopping lifecycle')
     lifecycle.stop()
   })
 
   if (import.meta.env.DEV) {
+    logger.info('Loading dev server URL: http://localhost:4173')
     win.loadURL('http://localhost:4173')
     win.webContents.openDevTools()
   } else {
-    await win.loadURL(`${SCHEME}://app/'`)
+    const url = `${SCHEME}://app/'`
+    logger.info('Loading production URL:', url)
+    await win.loadURL(url)
     win.webContents.openDevTools()
   }
 
   win.once('ready-to-show', () => {
+    logger.info('Window ready-to-show')
     win.show()
   })
 
@@ -133,16 +121,32 @@ async function createMainWindow() {
 }
 
 const bootstrap = async () => {
-  logger.info('App booting...')
+  logger.info('===== App booting =====')
+
+  // Register custom protocol scheme
+  logger.info('Registering protocol scheme...')
+  registerSchemesAsPrivileged()
+  logger.info('Protocol scheme registered', { scheme: SCHEME })
 
   // Initialize database (dev → cwd, prod → userData)
+  logger.info('Initializing database...')
   bootstrapDatabase()
+  logger.info('Database initialized')
 
   // Start lifecycle
+  logger.info('Starting app lifecycle...')
   lifecycle.start()
+  logger.info('App lifecycle started', { phase: lifecycle.phase })
+
+  // Listen for lifecycle phase transitions
+  lifecycle.onChange((phase, prev) => {
+    logger.info(`Lifecycle phase transition: ${prev} -> ${phase}`)
+  })
 
   // Create main window
+  logger.info('Creating main window...')
   await createMainWindow()
+  logger.info('Main window created')
 
   // macOS: re-create window on activate
   app.on('activate', () => {
@@ -168,12 +172,17 @@ const bootstrap = async () => {
 }
 
 // ========== Entry ==========
-registerSchemesAsPrivileged().then(() => app.whenReady()).then(bootstrap)
-.catch((err: unknown) => {
-  logger.error('Bootstrap failed:', err)
-  if (import.meta.env.PROD) writeCrashLog(err)
-  process.exit(1)
-})
+logger.info('Waiting for Electron ready...')
+app.whenReady()
+  .then(() => {
+    logger.info('Electron app ready')
+    bootstrap()
+  })
+  .catch((err: unknown) => {
+    logger.error('Bootstrap failed:', err)
+    if (import.meta.env.PROD) writeCrashLog(err)
+    process.exit(1)
+  })
 
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error)
