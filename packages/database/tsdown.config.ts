@@ -8,6 +8,6 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   deps: {
-    neverBundle: ['better-sqlite3'],
+    neverBundle: ['@libsql/client'],
   },
 })

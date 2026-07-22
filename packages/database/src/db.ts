@@ -1,11 +1,11 @@
-import Database from 'better-sqlite3'
-import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
+import { createClient } from '@libsql/client'
+import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql'
 import { dirname } from 'node:path'
 import { existsSync, mkdirSync } from 'node:fs'
 import * as schema from './schema.js'
 
-let _rawDb: Database.Database | null = null
-let _db: BetterSQLite3Database<typeof schema> | null = null
+let _client: ReturnType<typeof createClient> | null = null
+let _db: LibSQLDatabase<typeof schema> | null = null
 let _dbPath: string | null = null
 
 /**
@@ -13,7 +13,7 @@ let _dbPath: string | null = null
  * @param dbPath 数据库文件完整路径（含文件名，如 /path/to/multi-op.db）
  */
 export function initDb(dbPath: string) {
-  if (_rawDb) {
+  if (_client) {
     throw new Error('Database already initialized')
   }
   const dir = dirname(dbPath)
@@ -21,19 +21,19 @@ export function initDb(dbPath: string) {
     mkdirSync(dir, { recursive: true })
   }
   _dbPath = dbPath
-  _rawDb = new Database(dbPath)
-  _rawDb.pragma('journal_mode = WAL')
-  _db = drizzle(_rawDb, { schema })
+  _client = createClient({ url: `file://${dbPath}` })
+  _client.execute('PRAGMA journal_mode = WAL')
+  _db = drizzle(_client, { schema })
 }
 
-export function getRawDb(): Database.Database {
-  if (!_rawDb) {
+export function getClient() {
+  if (!_client) {
     throw new Error('Database not initialized, call initDb() first')
   }
-  return _rawDb
+  return _client
 }
 
-export function getDb(): BetterSQLite3Database<typeof schema> {
+export function getDb(): LibSQLDatabase<typeof schema> {
   if (!_db) {
     throw new Error('Database not initialized, call initDb() first')
   }

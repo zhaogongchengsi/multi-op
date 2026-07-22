@@ -17,19 +17,20 @@ export const ZAppEvent = z.discriminatedUnion('type', [
 export type AppEvent = z.infer<typeof ZAppEvent>
 
 // ========== Platform ==========
-export const ZPlatform = z.enum(['tg', 'wa', 'tw'])
+export const PLATFORMS = ['telegram', 'whatsapp', 'twitter'] as const
+export const ZPlatform = z.enum(PLATFORMS)
 export type Platform = z.infer<typeof ZPlatform>
 
 export const PLATFORM_LABEL: Record<Platform, string> = {
-  tg: 'Telegram',
-  wa: 'WhatsApp',
-  tw: 'Twitter',
+  telegram: 'Telegram',
+  whatsapp: 'WhatsApp',
+  twitter: 'Twitter',
 }
 
 export const PLATFORM_META: Record<Platform, { label: string; short: string; color: string }> = {
-  tg: { label: 'Telegram', short: 'TG', color: '#0088cc' },
-  wa: { label: 'WhatsApp', short: 'WA', color: '#25D366' },
-  tw: { label: 'Twitter', short: 'TW', color: '#1DA1F2' },
+  telegram: { label: 'Telegram', short: 'TG', color: '#0088cc' },
+  whatsapp: { label: 'WhatsApp', short: 'WA', color: '#25D366' },
+  twitter: { label: 'Twitter', short: 'TW', color: '#1DA1F2' },
 }
 
 // ========== Platform Connection Configs ==========
