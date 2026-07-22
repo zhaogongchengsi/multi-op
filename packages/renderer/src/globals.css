@@ -11,28 +11,8 @@
 
 /* ─── 自定义标题栏 (Windows/Linux 无边框窗口) ─────── */
 
-.title-bar {
-  display: flex;
-  align-items: center;
-  height: 32px;
-  flex-shrink: 0;
-  -webkit-app-region: drag;
-  user-select: none;
-  padding-left: 12px;
-  padding-right: 0;
-  background: var(--color-background-surface);
-}
-
-.title-bar-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-secondary, #888);
-  opacity: 0.8;
-}
-
 .title-bar-controls {
   display: flex;
-  margin-left: auto;
   height: 100%;
   -webkit-app-region: no-drag;
 }
@@ -63,9 +43,6 @@
   -webkit-app-region: drag;
 }
 
-.title-bar-controls {
-  -webkit-app-region: no-drag;
-}
 /* 侧边栏顶部标题区域可作为窗口拖拽手柄 */
 [data-platform='macos'] .astryx-side-nav-heading {
   -webkit-app-region: drag;
