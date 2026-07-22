@@ -8,6 +8,7 @@ import { SCHEME } from '@multi-op/shared'
 import { logger, writeCrashLog } from './logger.js'
 import { createAppWindow } from './window.js'
 import { registerSessionRoutes } from './router/session.js'
+import { registerGroupRoutes } from './router/group.js'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -63,6 +64,7 @@ const bootstrap = async () => {
   // Register API routes
   logger.info('Registering API routes...')
   registerSessionRoutes(router)
+  registerGroupRoutes(router)
   logger.info('Session routes registered')
 
   // Start lifecycle

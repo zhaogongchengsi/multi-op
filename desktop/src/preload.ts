@@ -57,6 +57,42 @@ const sessionAPI = {
     requestor.patch(`sessions/${id}/reorder`, { json: { position } }).json(),
 }
 
+// ─── Group API ───────────────────────────────────────────────────
+interface GroupRecord {
+  id: number
+  name: string
+  parentId: number | null
+  position: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+const groupAPI = {
+  /** List all groups */
+  list: (): Promise<{ data: GroupRecord[] }> =>
+    requestor.get('groups').json(),
+
+  /** List groups by parent (pass null for root-level groups) */
+  listByParent: (parentId: number | null): Promise<{ data: GroupRecord[] }> =>
+    requestor.get(`groups/parent/${parentId ?? 'null'}`).json(),
+
+  /** Get a single group by id */
+  get: (id: number): Promise<{ data: GroupRecord }> =>
+    requestor.get(`groups/${id}`).json(),
+
+  /** Create a new group */
+  create: (data: Record<string, unknown>): Promise<{ data: GroupRecord }> =>
+    requestor.post('groups', { json: data }).json(),
+
+  /** Update an existing group */
+  update: (id: number, data: Record<string, unknown>): Promise<{ success: boolean }> =>
+    requestor.put(`groups/${id}`, { json: data }).json(),
+
+  /** Delete a group */
+  delete: (id: number): Promise<{ success: boolean }> =>
+    requestor.delete(`groups/${id}`).json(),
+}
+
 ;(async () => {
   const { contextBridge, ipcRenderer } = await import('electron')
 
@@ -65,6 +101,7 @@ const sessionAPI = {
       SCHEME_URL,
       requestor,
       session: sessionAPI,
+      group: groupAPI,
     },
   })
 
