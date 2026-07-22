@@ -1,9 +1,23 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, protocol } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle, MainWindow } from '@multi-op/core'
 import { bootstrapDatabase } from './database.js'
 import { createRouter } from '@holix/router'
 import { createStaticMiddleware } from '@holix/static'
+import { SCHEME } from '@multi-op/shared'
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: SCHEME,
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      allowServiceWorkers: true,
+    },
+  },
+])
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -12,6 +26,7 @@ if (!gotSingleInstanceLock) {
   app.quit()
 }
 
+let protocolRegistered = false
 // ========== Bootstrap ==========
 const router = createRouter()
 const lifecycle = new AppLifecycle()
@@ -41,6 +56,11 @@ function createMainWindow() {
       sandbox: false,
     },
   })
+
+  if (win && !protocolRegistered) {
+    router.register(win.webContents.session.protocol)
+    protocolRegistered = true
+  }
 
   win.on('closed', () => {
     lifecycle.stop()
@@ -88,10 +108,13 @@ const bootstrap = () => {
 }
 
 // ========== Entry ==========
-app.whenReady().then(bootstrap).catch((err: unknown) => {
-  console.error('[MultiOp] Bootstrap failed:', err)
-  process.exit(1)
-})
+app
+  .whenReady()
+  .then(bootstrap)
+  .catch((err: unknown) => {
+    console.error('[MultiOp] Bootstrap failed:', err)
+    process.exit(1)
+  })
 
 process.on('uncaughtException', (error) => {
   console.log('[Main] Uncaught Exception:', error)
