@@ -357,6 +357,14 @@ export class WebContentManager {
     this.views.get(id)?.view.webContents.setAudioMuted(mute)
   }
 
+  /** Capture a screenshot of the view as a base64 data URL. */
+  async captureScreenshot(id: string): Promise<string> {
+    const entry = this.views.get(id) ?? this.pool.get(id)
+    if (!entry) throw new Error(`View ${id} not found`)
+    const image = await entry.view.webContents.capturePage()
+    return image.toDataURL()
+  }
+
   /** Update proxy rules for an existing view. Triggers configuring → loading → active. */
   async updateProxy(id: string, rules: string, bypassRules?: string): Promise<void> {
     const entry = this.views.get(id)
@@ -605,6 +613,14 @@ export class WebContentManager {
       p.setMute.name,
       (_event, payload: { id: string; mute: boolean }) => {
         this.setMute(payload.id, payload.mute)
+      },
+    )
+
+    ipcMain.handle(
+      p.capture.name,
+      async (_event, payload: { id: string }) => {
+        const dataUrl = await this.captureScreenshot(payload.id)
+        return { dataUrl }
       },
     )
   }

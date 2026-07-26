@@ -52,6 +52,7 @@ export class WebContentElement extends LitElement {
   @state() private _errorDescription = ''
   @state() private _loading = false
   @state() private _viewState = 'idle'
+  @state() private _screenshotDataUrl: string | null = null
 
   private _observer: ResizeObserver | null = null
   private _unsubEvent: (() => void) | null = null
@@ -123,6 +124,16 @@ export class WebContentElement extends LitElement {
       height: 0;
       overflow: hidden;
     }
+
+    .screenshot-placeholder {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      z-index: 1;
+    }
   `
 
   // ------------------------------------------------------------------
@@ -166,8 +177,12 @@ export class WebContentElement extends LitElement {
     // hidden toggle
     if (changed.has('hidden') && this.hidden !== this._prevHidden) {
       this._prevHidden = this.hidden
-      bridge.setHidden(this._viewId, this.hidden)
-      this._loading = false
+      if (this.hidden) {
+        this._takeScreenshotAndHide()
+      } else {
+        this._screenshotDataUrl = null
+        bridge.setHidden(this._viewId, false)
+      }
     }
 
     // mute toggle
@@ -186,6 +201,14 @@ export class WebContentElement extends LitElement {
   // ------------------------------------------------------------------
 
   override render() {
+    // Show frozen screenshot when hidden (dialog overlays native view)
+    if (this.hidden && this._screenshotDataUrl) {
+      return html`
+        <img class="screenshot-placeholder" src=${this._screenshotDataUrl} alt="" />
+        <slot></slot>
+      `
+    }
+
     return html`
       <slot></slot>
       ${this._renderOverlay()}
@@ -325,6 +348,23 @@ export class WebContentElement extends LitElement {
     this._errorCode = 0
     this._errorDescription = ''
     if (this.src) getBridge()?.loadURL(this._viewId, this.src)
+  }
+
+  private async _takeScreenshotAndHide(): Promise<void> {
+    const bridge = getBridge()
+    if (!bridge) {
+      bridge?.setHidden(this._viewId, true)
+      return
+    }
+    try {
+      const { dataUrl } = await bridge.captureScreenshot(this._viewId)
+      this._screenshotDataUrl = dataUrl
+    } catch {
+      this._screenshotDataUrl = null
+    }
+    // Hide the native view AFTER capturing (or failing)
+    bridge.setHidden(this._viewId, true)
+    this._loading = false
   }
 
   private _teardown(detachDestroy: boolean): void {

@@ -150,4 +150,5 @@ export const webContentProtocol = {
   setHidden:channel('webcontent:set-hidden', z.object({ id: z.string(), hidden: z.boolean() }), z.void()),
   updateProxy: channel('webcontent:update-proxy', z.object({ id: z.string(), rules: z.string(), bypassRules: z.string().optional() }), z.void()),
   setMute:  channel('webcontent:set-mute', z.object({ id: z.string(), mute: z.boolean() }), z.void()),
+  capture:  channel('webcontent:capture', z.object({ id: z.string() }), z.object({ dataUrl: z.string() })),
 } as const

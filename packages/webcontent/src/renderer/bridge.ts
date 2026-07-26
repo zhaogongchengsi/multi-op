@@ -17,6 +17,7 @@ export interface WebContentBridge {
   setHidden(id: string, hidden: boolean): Promise<void>
   setMute(id: string, mute: boolean): Promise<void>
   updateProxy(id: string, rules: string, bypassRules?: string): Promise<void>
+  captureScreenshot(id: string): Promise<{ dataUrl: string }>
   onEvent(cb: (event: WebContentEvent) => void): () => void
 }
 

@@ -39,6 +39,8 @@ export function createIPCBridge(): WebContentBridge {
       ipcRenderer.invoke(p.setMute.name, { id, mute }),
     updateProxy: (id, rules, bypassRules) =>
       ipcRenderer.invoke(p.updateProxy.name, { id, rules, bypassRules }),
+    captureScreenshot: (id) =>
+      ipcRenderer.invoke(p.capture.name, { id }),
     onEvent: (cb: (event: WebContentEvent) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, payload: WebContentEvent) => {
         cb(payload)

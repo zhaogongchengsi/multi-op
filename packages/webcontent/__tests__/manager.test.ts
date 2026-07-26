@@ -21,6 +21,7 @@ const { mockWC, mockView, mockContentView, mockWindow, mockSession } = vi.hoiste
     close: vi.fn(),
     on: vi.fn(),
     setWindowOpenHandler: vi.fn(),
+    capturePage: vi.fn().mockResolvedValue({ toDataURL: () => 'data:image/png;base64,test' }),
   }
 
   return {
@@ -325,6 +326,15 @@ describe('WebContentManager', () => {
 
       expect(mgr.getViewState('test-1')).toBe('loading')
       expect(mgr.getViewState('nonexistent')).toBeNull()
+    })
+
+    it('captureScreenshot calls webContents.capturePage and returns dataUrl', async () => {
+      const mgr = newManager()
+      await mgr.createView(makeOpts())
+
+      const dataUrl = await mgr.captureScreenshot('test-1')
+      expect(mockWC.capturePage).toHaveBeenCalled()
+      expect(dataUrl).toBe('data:image/png;base64,test')
     })
   })
 })
