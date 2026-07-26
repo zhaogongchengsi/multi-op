@@ -135,12 +135,10 @@ const bootstrap = async () => {
     }
   })
 
-  // Quit when all windows closed (non-macOS)
+  // Quit when all windows closed (all platforms)
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-      logger.info('All windows closed, quitting app')
-      app.quit()
-    }
+    logger.info('All windows closed, quitting app')
+    app.quit()
   })
 
   // Cleanup on quit

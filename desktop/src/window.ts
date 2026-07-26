@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import type { HolixProtocolRouter } from '@holix/router'
 import { AppLifecycle } from '@multi-op/core'
 import { SCHEME } from '@multi-op/shared'
@@ -57,6 +57,12 @@ export async function createAppWindow(options: WindowOptions): Promise<BrowserWi
   win.on('closed', () => {
     logger.info('Window closed, stopping lifecycle')
     lifecycle.stop()
+  })
+
+  // Quit app when window is closed (all platforms)
+  win.on('close', () => {
+    logger.info('Window closing, quitting app')
+    app.quit()
   })
 
   await loadContent(win)
