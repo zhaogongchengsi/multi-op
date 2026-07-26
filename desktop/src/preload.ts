@@ -1,5 +1,6 @@
 import type { LogLevel } from '@multi-op/logger'
 import { SCHEME } from '@multi-op/shared'
+import { exposeWebContentBridge } from '@multi-op/webcontent/preload'
 import ky from 'ky'
 
 const SCHEME_URL = `${SCHEME}://`
@@ -120,4 +121,7 @@ const groupAPI = {
       ipcRenderer.on('window:maximized-change', (_event, maximized) => callback(maximized))
     },
   })
+
+  // ─── WebContent Bridge ────────────────────────────────────────
+  exposeWebContentBridge()
 })()

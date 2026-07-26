@@ -14,6 +14,7 @@
     "@heroicons/react": "^2.2.0",
     "@multi-op/logger": "workspace:*",
     "@multi-op/shared": "workspace:*",
+    "@multi-op/webcontent": "workspace:*",
     "@stylexjs/stylex": "^0.19.0",
     "@tanstack/react-router": "^1.170.18",
     "ky": "^1.14.3",

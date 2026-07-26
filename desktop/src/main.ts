@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, protocol } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle } from '@multi-op/core'
+import { WebContentManager } from '@multi-op/webcontent'
 import { bootstrapDatabase } from './database.js'
 import { createRouter } from '@holix/router'
 import { createStaticMiddleware } from '@holix/static'
@@ -101,6 +102,14 @@ const bootstrap = async () => {
     lifecycle,
     router,
   })
+
+  // ─── WebContent Manager ────────────────────────────────────────
+  const webContentManager = new WebContentManager({
+    maxPoolSize: 5,
+    idleTimeout: 30 * 60_000,
+  })
+  webContentManager.attach(mainWin)
+  logger.info('WebContentManager attached to main window')
 
   // Notify renderer of maximize state changes
   mainWin.on('maximize', () => {

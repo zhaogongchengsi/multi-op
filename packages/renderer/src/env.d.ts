@@ -68,4 +68,31 @@ declare global {
   }
 }
 
+// ─── Web-Content Custom Element ──────────────────────────────────
+
+declare namespace JSX {
+  interface IntrinsicElements {
+    'web-content': React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        src?: string
+        partition?: string
+        hidden?: boolean | string
+        'detach-destroy'?: boolean | string
+        mute?: boolean | string
+        devtools?: boolean | string
+        'proxy-rules'?: string
+        'proxy-bypass'?: string
+        'loading-timeout'?: number | string
+        'allow-navigation'?: string
+        permissions?: string
+        preload?: string
+        zoomfactor?: number | string
+        useragent?: string
+        httpreferrer?: string
+      },
+      HTMLElement
+    >
+  }
+}
+
 export {}

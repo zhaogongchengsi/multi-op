@@ -26,6 +26,13 @@ const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'s
   twitter: HashtagIcon,
 }
 
+/** Maps platform to its web app URL */
+const PLATFORM_URLS: Record<string, string> = {
+  telegram: 'https://web.telegram.org/k/',
+  whatsapp: 'https://web.whatsapp.com',
+  twitter: 'https://x.com',
+}
+
 function PlatformIcon({ platform }: { platform: string }) {
   const Icon = PLATFORM_ICONS[platform] ?? ChatBubbleLeftEllipsisIcon
   const meta = PLATFORM_META[platform as keyof typeof PLATFORM_META]
@@ -39,17 +46,8 @@ function PlatformIcon({ platform }: { platform: string }) {
 
 function ChatView() {
   const { chatId } = Route.useParams()
-  const { state, selectChat, renameChat, createWorkspace, moveChat } = useWorkspaces()
+  const { state, selectChat } = useWorkspaces()
   const numericId = Number(chatId)
-
-  // Rename dialog
-  const [isRenameOpen, setIsRenameOpen] = useState(false)
-  const [renameValue, setRenameValue] = useState('')
-
-  // Move-to-group dialog
-  const [isGroupOpen, setIsGroupOpen] = useState(false)
-  const [newGroupName, setNewGroupName] = useState('')
-  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
 
   // Sync selected chat with the store
   useEffect(() => {
@@ -68,125 +66,22 @@ function ChatView() {
     )
   }
 
-  const handleRename = () => {
-    setRenameValue(chat.title)
-    setIsRenameOpen(true)
-  }
-
-  const handleRenameConfirm = () => {
-    if (renameValue.trim()) {
-      renameChat(chat.id, renameValue.trim())
-    }
-    setIsRenameOpen(false)
-  }
-
-  const handleMoveGroup = (groupId: number | null) => {
-    moveChat(chat.id, groupId)
-    setIsGroupOpen(false)
-  }
-
-  const handleCreateAndMove = async () => {
-    if (!newGroupName.trim()) return
-    setIsCreatingGroup(true)
-    try {
-      const newId = await createWorkspace(newGroupName.trim())
-      moveChat(chat.id, newId)
-    } finally {
-      setIsCreatingGroup(false)
-      setNewGroupName('')
-      setIsGroupOpen(false)
-    }
-  }
-
-  const realGroups = state.workspaces.filter(w => w.id !== -1)
+  const platformUrl = PLATFORM_URLS[chat.platform]
+  const partition = `persist:${chat.platform}-${chat.id}`
 
   return (
-    <div className="p-4 h-full flex flex-col">
-      <Card>
-        <Stack gap={1} align="center">
-          <PlatformIcon platform={chat.platform} />
-          <div className="font-semibold text-lg flex-1">{chat.title}</div>
-          <MoreMenu
-            label="Chat options"
-            items={[
-              { label: 'Rename', onClick: handleRename },
-              { label: 'Move to group', onClick: () => setIsGroupOpen(true) },
-            ]}
-          />
-        </Stack>
-        <div className="text-sm text-gray-500">
-          Status: {chat.status} · ID: {chat.id}
-        </div>
-      </Card>
-
-      {/* Rename dialog */}
-      <Dialog isOpen={isRenameOpen} onOpenChange={setIsRenameOpen} width={360}>
-        <Layout
-          header={<DialogHeader title="Rename conversation" onOpenChange={setIsRenameOpen} />}
-          content={
-            <LayoutContent>
-              <Stack gap={1}>
-                <TextInput
-                  label="Name"
-                  isLabelHidden
-                  placeholder="Conversation name"
-                  value={renameValue}
-                  onChange={setRenameValue}
-                  onEnter={handleRenameConfirm}
-                  hasAutoFocus
-                />
-                <Button label="Save" variant="primary" width="100%" onClick={handleRenameConfirm} />
-              </Stack>
-            </LayoutContent>
-          }
-        />
-      </Dialog>
-
-      {/* Move to group dialog */}
-      <Dialog isOpen={isGroupOpen} onOpenChange={setIsGroupOpen} width={360}>
-        <Layout
-          header={<DialogHeader title="Move to group" onOpenChange={setIsGroupOpen} />}
-          content={
-            <LayoutContent>
-              <Stack gap={0.5}>
-                <Button
-                  label="Ungrouped"
-                  variant="ghost"
-                  width="100%"
-                  onClick={() => handleMoveGroup(null)}
-                />
-                {realGroups.map(g => (
-                  <Button
-                    key={g.id}
-                    label={g.name}
-                    variant="ghost"
-                    width="100%"
-                    onClick={() => handleMoveGroup(g.id)}
-                  />
-                ))}
-                <Stack gap={0.5}>
-                  <TextInput
-                    label="New group name"
-                    isLabelHidden
-                    placeholder="New group name"
-                    value={newGroupName}
-                    onChange={setNewGroupName}
-                    onEnter={handleCreateAndMove}
-                  />
-                  <Button
-                    label="Create & move"
-                    variant="secondary"
-                    width="100%"
-                    onClick={handleCreateAndMove}
-                    isLoading={isCreatingGroup}
-                    isDisabled={!newGroupName.trim()}
-                  />
-                </Stack>
-              </Stack>
-            </LayoutContent>
-          }
-        />
-      </Dialog>
+    <div className="p-2 h-full flex flex-col">
+     {platformUrl ? (
+       <web-content
+         src={platformUrl}
+         partition={partition}
+         class="flex-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
+       />
+     ) : (
+       <div className="flex items-center justify-center flex-1 text-gray-500">
+         Unsupported platform: {chat.platform}
+       </div>
+     )}
     </div>
   )
 }
