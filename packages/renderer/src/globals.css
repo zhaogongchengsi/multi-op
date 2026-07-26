@@ -53,3 +53,24 @@
 [data-platform='macos'] .astryx-side-nav-collapse-button {
   -webkit-app-region: no-drag;
 }
+
+/* ─── Web-Content Switching Indicator ─────────────────────────── */
+
+.switching-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 10;
+  height: 2px;
+  background: var(--bar-color, #666);
+  border-radius: 1px;
+  animation: bar-slide 0.38s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes bar-slide {
+  0%   { width: 0; left: 8px; opacity: 1; }
+  70%  { width: calc(100% - 16px); left: 8px; opacity: 0.8; }
+  100% { width: calc(100% - 16px); left: 8px; opacity: 0; }
+}

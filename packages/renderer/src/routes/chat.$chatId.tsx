@@ -1,30 +1,11 @@
-import { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Card } from '@astryxdesign/core/Card'
-import {
-  PaperAirplaneIcon,
-  ChatBubbleLeftRightIcon,
-  HashtagIcon,
-  ChatBubbleLeftEllipsisIcon,
-} from '@heroicons/react/24/outline'
-import { Stack } from '@astryxdesign/core/Stack'
-import { MoreMenu } from '@astryxdesign/core/MoreMenu'
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog'
-import { TextInput } from '@astryxdesign/core/TextInput'
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout'
-import { Button } from '@astryxdesign/core/Button'
-import { PLATFORM_META } from '@multi-op/shared'
 import { useWorkspaces } from '~/stores/workspace'
+import { PLATFORM_META } from '@multi-op/shared'
 
 export const Route = createFileRoute('/chat/$chatId')({
   component: ChatView,
 })
-
-const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'svg'>>> = {
-  telegram: PaperAirplaneIcon,
-  whatsapp: ChatBubbleLeftRightIcon,
-  twitter: HashtagIcon,
-}
 
 /** Maps platform to its web app URL */
 const PLATFORM_URLS: Record<string, string> = {
@@ -33,21 +14,20 @@ const PLATFORM_URLS: Record<string, string> = {
   twitter: 'https://x.com',
 }
 
-function PlatformIcon({ platform }: { platform: string }) {
-  const Icon = PLATFORM_ICONS[platform] ?? ChatBubbleLeftEllipsisIcon
-  const meta = PLATFORM_META[platform as keyof typeof PLATFORM_META]
-  return (
-    <Icon
-      style={{ color: meta?.color }}
-      className="w-5 h-5 shrink-0"
-    />
-  )
-}
 
 function ChatView() {
   const { chatId } = Route.useParams()
   const { state, selectChat } = useWorkspaces()
   const numericId = Number(chatId)
+
+  // ─── Switching indicator ───────────────────────────────────────
+  const [switching, setSwitching] = useState(false)
+
+  useEffect(() => {
+    setSwitching(true)
+    const timer = setTimeout(() => setSwitching(false), 400)
+    return () => clearTimeout(timer)
+  }, [numericId])
 
   // Sync selected chat with the store
   useEffect(() => {
@@ -68,15 +48,24 @@ function ChatView() {
 
   const platformUrl = PLATFORM_URLS[chat.platform]
   const partition = `persist:${chat.platform}-${chat.id}`
+  const accentColor = (PLATFORM_META as Record<string, { color: string }>)[chat.platform]?.color
 
   return (
-    <div className="p-2 h-full flex flex-col">
-     {platformUrl ? (
-       <web-content
-         src={platformUrl}
-         partition={partition}
-         class="flex-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
+    <div className="p-1 h-full flex flex-col relative">
+     {/* Switching indicator bar */}
+     {switching && (
+       <div
+         className="switching-indicator"
+         style={{ '--bar-color': accentColor } as React.CSSProperties}
        />
+     )}
+     {platformUrl ? (
+       React.createElement('web-content', {
+         key: numericId,
+         src: platformUrl,
+         partition,
+         className: 'flex-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700',
+       })
      ) : (
        <div className="flex items-center justify-center flex-1 text-gray-500">
          Unsupported platform: {chat.platform}
