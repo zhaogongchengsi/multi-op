@@ -28,8 +28,8 @@ function WelcomePage() {
         </Stack>
 
         <Text
-          type="caption"
-          color="tertiary"
+          type="supporting"
+          color="disabled"
           className="animate-fade-in"
           style={{ animationDelay: '0.5s' }}
         >

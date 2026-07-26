@@ -7,14 +7,17 @@ import {
   SideNavItem,
   SideNavSection,
 } from '@astryxdesign/core/SideNav'
-import { Cog6ToothIcon, UserCircleIcon, MinusIcon, Square2StackIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, MinusIcon, Square2StackIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import {WorkspaceProvider} from '~/stores/workspace'
+import {CustomAddressProvider, useCustomAddresses} from '~/stores/custom-address'
 import { SidebarWorkspaces } from '~/components/SidebarWorkspaces'
+import { SettingsDialog } from '~/components/SettingsDialog'
 
 const isWin = navigator.platform.startsWith('Win')
 
 function ShellLayout() {
   const [isMaximized, setIsMaximized] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   useEffect(() => {
     if (!window.windowControls) return
@@ -27,6 +30,7 @@ function ShellLayout() {
 
   return (
     <WorkspaceProvider>
+      <CustomAddressProvider>
       <div className="w-screen h-screen">
         <AppShell
           variant="surface"
@@ -53,10 +57,15 @@ function ShellLayout() {
               collapsible
               resizable={{defaultWidth: 300, minWidth: 220, maxWidth: 420}}
               footer={
-                <SideNavSection title="Account" isHeaderHidden>
-                  <SideNavItem label="Settings" icon={Cog6ToothIcon} href="#" />
-                  <SideNavItem label="Sarah Chen" icon={UserCircleIcon} href="#" />
-                </SideNavSection>
+                <SideNavItem
+                  label="Settings"
+                  icon={Cog6ToothIcon}
+                  href="void:;"
+                  onClick={(e: React.MouseEvent) => {
+                    e.preventDefault()
+                    setIsSettingsOpen(true)
+                  }}
+                />
               }>
               <SidebarWorkspaces />
             </SideNav>
@@ -71,6 +80,8 @@ function ShellLayout() {
           />
         </AppShell>
       </div>
+      <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      </CustomAddressProvider>
     </WorkspaceProvider>
   )
 }
