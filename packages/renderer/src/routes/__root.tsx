@@ -29,6 +29,7 @@ function ShellLayout() {
     <WorkspaceProvider>
       <div className="w-screen h-screen">
         <AppShell
+          variant="surface"
           contentPadding={0}
           topNav={
             <div className="w-full h-12 flex items-center justify-between px-4 app-shell-top-nav">

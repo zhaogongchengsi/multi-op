@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { autoInitBridge, registerWebContentElement } from '@multi-op/webcontent/renderer'
+import { WebContentOverlayProvider } from '~/contexts/webcontent-overlay'
 import { routeTree } from '~/routeTree.gen'
 import '~/globals.css'
 
@@ -24,6 +25,8 @@ declare module '@tanstack/react-router' {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <WebContentOverlayProvider>
+      <RouterProvider router={router} />
+    </WebContentOverlayProvider>
   </StrictMode>,
 )

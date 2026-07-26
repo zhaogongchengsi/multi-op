@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useWorkspaces } from '~/stores/workspace'
 import { PLATFORM_META } from '@multi-op/shared'
+import { useWebContentOverlay } from '~/contexts/webcontent-overlay'
 
 export const Route = createFileRoute('/chat/$chatId')({
   component: ChatView,
@@ -29,6 +30,9 @@ function ChatView() {
     return () => clearTimeout(timer)
   }, [numericId])
 
+  // ─── Overlay hiding (dialogs on top of native WebContentsView) ─
+  const { hidden: overlayActive } = useWebContentOverlay()
+
   // Sync selected chat with the store
   useEffect(() => {
     selectChat(numericId)
@@ -51,7 +55,7 @@ function ChatView() {
   const accentColor = (PLATFORM_META as Record<string, { color: string }>)[chat.platform]?.color
 
   return (
-    <div className="p-1 h-full flex flex-col relative">
+    <div className="h-full flex flex-col relative">
      {/* Switching indicator bar */}
      {switching && (
        <div
@@ -64,6 +68,7 @@ function ChatView() {
          key: numericId,
          src: platformUrl,
          partition,
+         hidden: overlayActive || undefined,
          className: 'flex-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700',
        })
      ) : (
