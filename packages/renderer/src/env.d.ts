@@ -57,6 +57,8 @@ declare global {
       log: (level: LogLevel, ...args: unknown[]) => void
     }
     bridge: {
+      preloadPath: string
+      webviewPreloadPath: string
       services: BridgeServices
     }
     windowControls: {
@@ -65,33 +67,6 @@ declare global {
       close: () => void
       onMaximizedChange: (callback: (maximized: boolean) => void) => void
     }
-  }
-}
-
-// ─── Web-Content Custom Element ──────────────────────────────────
-
-declare namespace JSX {
-  interface IntrinsicElements {
-    'web-content': React.DetailedHTMLProps<
-      React.HTMLAttributes<HTMLElement> & {
-        src?: string
-        partition?: string
-        hidden?: boolean | string
-        'detach-destroy'?: boolean | string
-        mute?: boolean | string
-        devtools?: boolean | string
-        'proxy-rules'?: string
-        'proxy-bypass'?: string
-        'loading-timeout'?: number | string
-        'allow-navigation'?: string
-        permissions?: string
-        preload?: string
-        zoomfactor?: number | string
-        useragent?: string
-        httpreferrer?: string
-      },
-      HTMLElement
-    >
   }
 }
 

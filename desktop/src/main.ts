@@ -1,7 +1,6 @@
-import { app, BrowserWindow, ipcMain, protocol } from 'electron'
+import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle } from '@multi-op/core'
-import { WebContentManager } from '@multi-op/webcontent'
 import { bootstrapDatabase } from './database.js'
 import { createRouter } from '@holix/router'
 import { createStaticMiddleware } from '@holix/static'
@@ -78,6 +77,16 @@ const bootstrap = async () => {
     logger.info(`Lifecycle phase transition: ${prev} -> ${phase}`)
   })
 
+  // ─── Webview security: force external links to browser ────────
+  app.on('web-contents-created', (_event, wc) => {
+    if (wc.getType() === 'webview') {
+      wc.setWindowOpenHandler(({ url }) => {
+        shell.openExternal(url).catch(() => {})
+        return { action: 'deny' }
+      })
+    }
+  })
+
   // ─── IPC: Window controls (for frameless window) ──────────────
   ipcMain.on('window:minimize', (event) => {
     BrowserWindow.fromWebContents(event.sender)?.minimize()
@@ -103,14 +112,6 @@ const bootstrap = async () => {
     router,
   })
 
-  // ─── WebContent Manager ────────────────────────────────────────
-  const webContentManager = new WebContentManager({
-    maxPoolSize: 5,
-    idleTimeout: 30 * 60_000,
-  })
-  webContentManager.attach(mainWin)
-  logger.info('WebContentManager attached to main window')
-
   // Notify renderer of maximize state changes
   mainWin.on('maximize', () => {
     mainWin.webContents.send('window:maximized-change', true)
@@ -121,7 +122,7 @@ const bootstrap = async () => {
 
   logger.info('Main window created')
 
-  // macOS: re-create window on activate
+  // macOS: re-create window on activate ───────────────────────
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       logger.info('Re-creating main window on activate')

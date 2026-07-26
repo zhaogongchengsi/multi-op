@@ -25,7 +25,6 @@ import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
 import {Button} from '@astryxdesign/core/Button'
 import {PLATFORMS, PLATFORM_LABEL, PLATFORM_META} from '@multi-op/shared'
 import {useWorkspaces} from '../stores/workspace'
-import { useDialogOverlay } from '../contexts/webcontent-overlay'
 import type { Workspace, Chat, ChatStatus } from '../stores/workspace'
 
 // ─── Platform icon ────────────────────────────────────────────────
@@ -82,10 +81,6 @@ function ConversationItem({
   const { state, renameChat, deleteChat, createWorkspace, moveChat } = useWorkspaces()
   const showMenu = isHovered || isMenuOpen
   const realGroups = state.workspaces.filter(w => w.id !== -1)
-
-  // Hide web-content while dialogs are visible
-  useDialogOverlay(isRenameOpen)
-  useDialogOverlay(isGroupOpen)
 
   const handleRename = () => {
     setRenameValue(chat.title)
@@ -262,10 +257,6 @@ export function SidebarWorkspaces() {
 
   const realGroups = workspaces.filter(ws => ws.id !== -1)
   const ungrouped = workspaces.find(ws => ws.id === -1)?.chats ?? []
-
-  // Hide web-content while dialogs are visible
-  useDialogOverlay(isDialogOpen)
-  useDialogOverlay(isGroupDialogOpen)
 
   const handleSelectChat = (chatId: number) => {
     selectChat(chatId)

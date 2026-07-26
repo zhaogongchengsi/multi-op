@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useWorkspaces } from '~/stores/workspace'
 import { PLATFORM_META } from '@multi-op/shared'
-import { useWebContentOverlay } from '~/contexts/webcontent-overlay'
+import { useWebviewSlot } from '~/hooks/useWebviewSlot'
 
 export const Route = createFileRoute('/chat/$chatId')({
   component: ChatView,
@@ -30,9 +30,6 @@ function ChatView() {
     return () => clearTimeout(timer)
   }, [numericId])
 
-  // ─── Overlay hiding (dialogs on top of native WebContentsView) ─
-  const { hidden: overlayActive } = useWebContentOverlay()
-
   // Sync selected chat with the store
   useEffect(() => {
     selectChat(numericId)
@@ -54,8 +51,18 @@ function ChatView() {
   const partition = `persist:${chat.platform}-${chat.id}`
   const accentColor = (PLATFORM_META as Record<string, { color: string }>)[chat.platform]?.color
 
+  // Webview slot: the webview lives in a body-level pool container and is
+  // positioned absolutely over this ref. Z-index is 0 so DOM dialogs on
+  // #root naturally appear above. Session persists because webview never
+  // leaves the DOM.
+  const webviewId = `chat-${chat.platform}-${chat.id}`
+  const slotRef = useWebviewSlot(webviewId, platformUrl, partition)
+
   return (
-    <div className="h-full flex flex-col relative">
+    <div
+      className="h-full flex flex-col relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
+      style={{ zIndex: 1 }}
+    >
      {/* Switching indicator bar */}
      {switching && (
        <div
@@ -64,13 +71,7 @@ function ChatView() {
        />
      )}
      {platformUrl ? (
-       React.createElement('web-content', {
-         key: numericId,
-         src: platformUrl,
-         partition,
-         hidden: overlayActive || undefined,
-         className: 'flex-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700',
-       })
+       <div ref={slotRef} className="flex-1" />
      ) : (
        <div className="flex items-center justify-center flex-1 text-gray-500">
          Unsupported platform: {chat.platform}

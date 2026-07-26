@@ -1,7 +1,7 @@
 import type { LogLevel } from '@multi-op/logger'
 import { SCHEME } from '@multi-op/shared'
-import { exposeWebContentBridge } from '@multi-op/webcontent/preload'
 import ky from 'ky'
+import { join } from 'path'
 
 const SCHEME_URL = `${SCHEME}://`
 const API_PREFIX = `${SCHEME_URL}app/api`
@@ -94,10 +94,17 @@ const groupAPI = {
     requestor.delete(`groups/${id}`).json(),
 }
 
+
+
+const preloadPath = join(__dirname, 'preload.mjs')
+const webviewPreloadPath = join(__dirname, 'webview-preload.cjs')
+
 ;(async () => {
   const { contextBridge, ipcRenderer } = await import('electron')
 
   contextBridge.exposeInMainWorld('bridge', {
+    preloadPath,
+    webviewPreloadPath,
     services: {
       SCHEME_URL,
       requestor,
@@ -122,6 +129,4 @@ const groupAPI = {
     },
   })
 
-  // ─── WebContent Bridge ────────────────────────────────────────
-  exposeWebContentBridge()
 })()

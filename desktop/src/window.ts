@@ -46,6 +46,7 @@ export async function createAppWindow(options: WindowOptions): Promise<BrowserWi
       preload: preloadPath,
       contextIsolation: true,
       sandbox: false,
+      webviewTag: true,
     },
   })
 
