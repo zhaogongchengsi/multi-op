@@ -1,27 +1,19 @@
 import { useState } from 'react'
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog'
-import { Layout, LayoutContent, LayoutFooter, LayoutPanel, HStack } from '@astryxdesign/core/Layout'
+import { Layout, LayoutFooter, LayoutPanel, HStack } from '@astryxdesign/core/Layout'
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav'
-import { Section } from '@astryxdesign/core/Section'
-import { FormLayout } from '@astryxdesign/core/FormLayout'
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from '@astryxdesign/core/SegmentedControl'
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput'
 import { Button } from '@astryxdesign/core/Button'
-import { TextInput } from '@astryxdesign/core/TextInput'
-import { Text, Heading } from '@astryxdesign/core/Text'
 import {
   Cog6ToothIcon,
   GlobeAltIcon,
   BookmarkIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
-import { useStore } from '@tanstack/react-store'
-import { customAddressStore, addAddress, removeAddress } from '~/stores/custom-address-store'
+import { GeneralTab } from './settings/GeneralTab'
+import { PlatformTab } from './settings/PlatformTab'
+import { CustomAddressesTab } from './settings/CustomAddressesTab'
+import { AboutTab } from './settings/AboutTab'
 import stylex from '@stylexjs/stylex'
-
 
 const styles = stylex.create({
   dialogContent: {
@@ -29,10 +21,8 @@ const styles = stylex.create({
   },
   layoutPanel: {
     padding: '0.5rem',
-  }
+  },
 })
-
-// ─── Vertical nav config ─────────────────────────────────────────
 
 type SettingsTab = 'general' | 'platform' | 'custom-addresses' | 'about'
 
@@ -43,177 +33,11 @@ const NAV_ITEMS: { value: SettingsTab; label: string; icon: React.ComponentType<
   { value: 'about', label: 'About', icon: InformationCircleIcon },
 ]
 
-function GeneralTab() {
-  const [layout, setLayout] = useState('tile')
-  const [launchAtStartup, setLaunchAtStartup] = useState(false)
-
-  return (
-    <LayoutContent>
-      <Section dividers={['bottom']}>
-        <Heading level={4}>Startup & Window</Heading>
-        <FormLayout>
-          <SegmentedControl
-            label="Default layout"
-            value={layout}
-            onChange={setLayout}
-            size="sm"
-          >
-            <SegmentedControlItem value="tile" label="Tile" />
-            <SegmentedControlItem value="grid" label="Grid" />
-            <SegmentedControlItem value="tabs" label="Tabs" />
-            <SegmentedControlItem value="free" label="Free" />
-          </SegmentedControl>
-          <CheckboxInput
-            label="Launch at system startup"
-            value={launchAtStartup}
-            onChange={setLaunchAtStartup}
-          />
-        </FormLayout>
-      </Section>
-    </LayoutContent>
-  )
-}
-
-function PlatformTab() {
-  const [autoOpen, setAutoOpen] = useState(true)
-
-  return (
-    <LayoutContent>
-      <Section dividers={['bottom']}>
-        <Heading level={4}>Telegram</Heading>
-        <FormLayout>
-          <CheckboxInput
-            label="Auto-open links in app"
-            value={autoOpen}
-            onChange={setAutoOpen}
-          />
-        </FormLayout>
-      </Section>
-      <Section dividers={['bottom']}>
-        <Heading level={4}>WhatsApp</Heading>
-        <FormLayout>
-          <CheckboxInput
-            label="Auto-open links in app"
-            value={autoOpen}
-            onChange={setAutoOpen}
-          />
-        </FormLayout>
-      </Section>
-      <Section dividers={['bottom']}>
-        <Heading level={4}>Twitter</Heading>
-        <FormLayout>
-          <CheckboxInput
-            label="Auto-open links in app"
-            value={autoOpen}
-            onChange={setAutoOpen}
-          />
-        </FormLayout>
-      </Section>
-    </LayoutContent>
-  )
-}
-
-function AboutTab() {
-  return (
-    <LayoutContent>
-      <Section>
-        <Heading level={4}>Multi-Op</Heading>
-        <Text type="body" color="secondary">
-          Multi-platform account management tool.
-        </Text>
-        <Text type="supporting" color="disabled">
-          Version 0.1.0
-        </Text>
-      </Section>
-    </LayoutContent>
-  )
-}
-
-// ─── Custom address management tab ───────────────────────────────
-
-function CustomAddressesTab() {
-  const addresses = useStore(customAddressStore, s => s.addresses)
-  const [name, setName] = useState('')
-  const [url, setUrl] = useState('')
-  const [iconPreview, setIconPreview] = useState<string | null>(null)
-
-  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setIconPreview(reader.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  const handleAdd = () => {
-    if (!name.trim() || !url.trim()) return
-    addAddress({ name: name.trim(), url: url.trim(), icon: iconPreview })
-    setName('')
-    setUrl('')
-    setIconPreview(null)
-  }
-
-  return (
-    <LayoutContent>
-      <Section dividers={['bottom']}>
-        <Heading level={4}>Add Custom Address</Heading>
-        <FormLayout>
-          <TextInput label="Name" placeholder="My Service" value={name} onChange={setName} />
-          <TextInput label="URL" placeholder="https://example.com" value={url} onChange={setUrl} />
-
-          {/* Icon upload */}
-          <div className="flex flex-col gap-2">
-            <Text type="supporting" color="secondary">Icon (optional)</Text>
-            <div className="flex items-center gap-3">
-              <label className="cursor-pointer px-3 py-1.5 rounded-md border border-gray-300 text-sm hover:bg-gray-50 transition-colors">
-                Choose image
-                <input type="file" accept="image/*" className="hidden" onChange={handleIconUpload} />
-              </label>
-              {iconPreview && (
-                <img src={iconPreview} alt="Preview" className="size-8 rounded object-cover" />
-              )}
-            </div>
-          </div>
-
-          <Button
-            label="Add address"
-            variant="primary"
-            onClick={handleAdd}
-            isDisabled={!name.trim() || !url.trim()}
-          />
-        </FormLayout>
-      </Section>
-
-      {addresses.length > 0 && (
-        <Section dividers={['bottom']}>
-          <Heading level={4}>Saved Addresses ({addresses.length})</Heading>
-          <div className="flex flex-col gap-2">
-            {addresses.map(addr => (
-              <div key={addr.id} className="flex items-center gap-3 p-2 rounded-md border border-gray-200">
-                {addr.icon ? (
-                  <img src={addr.icon} alt={addr.name} className="size-6 rounded object-cover shrink-0" />
-                ) : (
-                  <div className="size-6 rounded bg-gray-200 shrink-0 flex items-center justify-center text-xs text-gray-500">
-                    {addr.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <Text type="body" className="truncate">{addr.name}</Text>
-                  <Text type="supporting" color="disabled" className="truncate">{addr.url}</Text>
-                </div>
-                <Button
-                  label="Remove"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeAddress(addr.id)}
-                />
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
-    </LayoutContent>
-  )
+const TAB_CONTENT: Record<SettingsTab, React.ComponentType> = {
+  general: GeneralTab,
+  platform: PlatformTab,
+  'custom-addresses': CustomAddressesTab,
+  about: AboutTab,
 }
 
 interface SettingsDialogProps {
@@ -224,18 +48,7 @@ interface SettingsDialogProps {
 export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'general':
-        return <GeneralTab />
-      case 'platform':
-        return <PlatformTab />
-      case 'custom-addresses':
-        return <CustomAddressesTab />
-      case 'about':
-        return <AboutTab />
-    }
-  }
+  const Content = TAB_CONTENT[activeTab]
 
   return (
     <Dialog
@@ -280,7 +93,7 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
               </SideNav>
             </LayoutPanel>
           }
-          content={renderTabContent()}
+          content={<Content />}
           footer={
             <LayoutFooter>
               <HStack gap={2} hAlign="end">

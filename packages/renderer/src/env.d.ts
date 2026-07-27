@@ -50,12 +50,18 @@ declare global {
     write: (prefix: string, data: Record<string, unknown>) => Promise<{ success: boolean }>
   }
 
+  interface AutoLaunchAPI {
+    get: () => Promise<boolean>
+    set: (enabled: boolean) => Promise<void>
+  }
+
   interface BridgeServices {
     SCHEME_URL: string
     requestor: import('ky').KyInstance
     session: SessionAPI
     group: GroupAPI
     config: ConfigAPI
+    autoLaunch: AutoLaunchAPI
   }
 
   interface Window {

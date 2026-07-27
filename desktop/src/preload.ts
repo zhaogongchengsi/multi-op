@@ -105,8 +105,6 @@ const configAPI = {
     requestor.put(`config/${prefix}`, { json: data }).json(),
 }
 
-
-
 const preloadPath = join(__dirname, 'preload.mjs')
 const webviewPreloadPath = join(__dirname, 'webview-preload.cjs')
 
@@ -122,6 +120,14 @@ const webviewPreloadPath = join(__dirname, 'webview-preload.cjs')
       session: sessionAPI,
       group: groupAPI,
       config: configAPI,
+      autoLaunch: {
+        /** Get current auto-launch state */
+        get: (): Promise<boolean> =>
+          ipcRenderer.invoke('auto-launch:get'),
+        /** Set auto-launch on/off */
+        set: (enabled: boolean): Promise<void> =>
+          ipcRenderer.invoke('auto-launch:set', enabled),
+      },
     },
   })
 

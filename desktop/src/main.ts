@@ -105,6 +105,15 @@ const bootstrap = async () => {
     BrowserWindow.fromWebContents(event.sender)?.close()
   })
 
+  // ─── IPC: Auto-launch ─────────────────────────────────────────
+  ipcMain.handle('auto-launch:get', () => {
+    const settings = app.getLoginItemSettings()
+    return settings.openAtLogin
+  })
+  ipcMain.handle('auto-launch:set', (_event, enabled: boolean) => {
+    app.setLoginItemSettings({ openAtLogin: enabled })
+  })
+
   // Create main window (created with show: false, shown on ready-to-show)
   logger.info('Creating main window...')
   const mainWin = await createAppWindow({

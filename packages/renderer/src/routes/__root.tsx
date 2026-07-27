@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { Theme } from '@astryxdesign/core/theme'
+import { neutralTheme } from '@astryxdesign/theme-neutral'
 import {AppShell} from '@astryxdesign/core/AppShell'
 import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
 import {
@@ -9,6 +11,9 @@ import {
 } from '@astryxdesign/core/SideNav'
 import { Cog6ToothIcon, MinusIcon, Square2StackIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { loadAll } from '~/stores/workspace-store'
+import { loadSettings, settingsStore, selectTheme } from '~/stores/settings-store'
+import { loadCustomAddresses } from '~/stores/custom-address-store'
+import { useStore } from '@tanstack/react-store'
 import { SidebarWorkspaces } from '~/components/SidebarWorkspaces'
 import { SettingsDialog } from '~/components/SettingsDialog'
 
@@ -17,6 +22,7 @@ const isWin = navigator.platform.startsWith('Win')
 function ShellLayout() {
   const [isMaximized, setIsMaximized] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const theme = useStore(settingsStore, selectTheme)
 
   useEffect(() => {
     if (!window.windowControls) return
@@ -27,15 +33,17 @@ function ShellLayout() {
   const handleMaximize = useCallback(() => window.windowControls?.maximize(), [])
   const handleClose = useCallback(() => window.windowControls?.close(), [])
 
-  // Init workspace data on mount
+  // Init all data on mount
   useEffect(() => {
     if (window.bridge) {
       loadAll()
+      loadSettings()
+      loadCustomAddresses()
     }
   }, [])
 
   return (
-    <>
+    <Theme theme={neutralTheme} mode={theme}>
       <div className="w-screen h-screen">
         <AppShell
           variant="surface"
@@ -86,7 +94,7 @@ function ShellLayout() {
         </AppShell>
       </div>
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
-    </>
+    </Theme>
   )
 }
 
