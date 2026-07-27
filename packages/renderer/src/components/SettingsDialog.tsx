@@ -57,11 +57,12 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
       width={800}
       purpose="form"
     >
-      <div className="min-h-95 flex flex-col">
+      <div style={{ height: '55vh' }}>
         <Layout
           height="fill"
           header={
             <DialogHeader
+              hasDivider
               title="Settings"
               subtitle="Configure Multi-Op preferences"
               onOpenChange={onOpenChange}
@@ -95,7 +96,7 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
           }
           content={<Content />}
           footer={
-            <LayoutFooter>
+            <LayoutFooter height="fit" hasDivider>
               <HStack gap={2} hAlign="end">
                 <Button label="Close" variant="secondary" onClick={() => onOpenChange(false)} />
               </HStack>

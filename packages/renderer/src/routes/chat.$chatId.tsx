@@ -40,6 +40,19 @@ function ChatView() {
   const allChats = workspaces.flatMap(w => w.chats)
   const chat = allChats.find(c => c.id === numericId)
 
+  // Compute slot values (may be undefined when chat not found)
+  const platformUrl = chat ? PLATFORM_URLS[chat.platform] ?? '' : ''
+  const partition = chat ? `persist:${chat.platform}-${chat.id}` : ''
+  const accentColor = chat
+    ? (PLATFORM_META as Record<string, { color: string }>)[chat.platform]?.color
+    : undefined
+
+  // Webview slot: hooks must be called before any early returns.
+  // When chat is not found, the slotRef won't be attached to DOM and the
+  // webview stays hidden in the pool.
+  const webviewId = chat ? `chat-${chat.platform}-${chat.id}` : ''
+  const slotRef = useWebviewSlot(webviewId, platformUrl, partition)
+
   if (!chat) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
@@ -47,17 +60,6 @@ function ChatView() {
       </div>
     )
   }
-
-  const platformUrl = PLATFORM_URLS[chat.platform]
-  const partition = `persist:${chat.platform}-${chat.id}`
-  const accentColor = (PLATFORM_META as Record<string, { color: string }>)[chat.platform]?.color
-
-  // Webview slot: the webview lives in a body-level pool container and is
-  // positioned absolutely over this ref. Z-index is 0 so DOM dialogs on
-  // #root naturally appear above. Session persists because webview never
-  // leaves the DOM.
-  const webviewId = `chat-${chat.platform}-${chat.id}`
-  const slotRef = useWebviewSlot(webviewId, platformUrl, partition)
 
   return (
     <div

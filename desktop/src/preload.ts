@@ -128,6 +128,11 @@ const webviewPreloadPath = join(__dirname, 'webview-preload.cjs')
         set: (enabled: boolean): Promise<void> =>
           ipcRenderer.invoke('auto-launch:set', enabled),
       },
+      theme: {
+        /** Notify main process of theme change (nativeTheme.themeSource) */
+        setNative: (mode: 'light' | 'dark' | 'system') =>
+          ipcRenderer.invoke('settings:set-theme', mode),
+      },
     },
   })
 

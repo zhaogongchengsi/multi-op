@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, protocol, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, protocol, shell } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle } from '@multi-op/core'
 import { bootstrapDatabase } from './database.js'
@@ -112,6 +112,11 @@ const bootstrap = async () => {
   })
   ipcMain.handle('auto-launch:set', (_event, enabled: boolean) => {
     app.setLoginItemSettings({ openAtLogin: enabled })
+  })
+
+  // ─── IPC: Theme ───────────────────────────────────────────────
+  ipcMain.handle('settings:set-theme', (_event, mode: 'light' | 'dark' | 'system') => {
+    nativeTheme.themeSource = mode
   })
 
   // Create main window (created with show: false, shown on ready-to-show)

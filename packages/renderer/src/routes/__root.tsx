@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { Theme } from '@astryxdesign/core/theme'
-import { neutralTheme } from '@astryxdesign/theme-neutral'
+import { neutralTheme } from '@astryxdesign/theme-neutral/built'
 import {AppShell} from '@astryxdesign/core/AppShell'
 import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
 import {

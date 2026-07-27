@@ -55,6 +55,11 @@ declare global {
     set: (enabled: boolean) => Promise<void>
   }
 
+  interface ThemeAPI {
+    /** Notify main process to update nativeTheme.themeSource */
+    setNative: (mode: 'light' | 'dark' | 'system') => void
+  }
+
   interface BridgeServices {
     SCHEME_URL: string
     requestor: import('ky').KyInstance
@@ -62,6 +67,7 @@ declare global {
     group: GroupAPI
     config: ConfigAPI
     autoLaunch: AutoLaunchAPI
+    theme: ThemeAPI
   }
 
   interface Window {

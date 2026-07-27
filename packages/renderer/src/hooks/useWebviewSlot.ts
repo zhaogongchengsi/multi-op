@@ -1,5 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react'
 
+import { sendThemeToWebview } from '~/utils/webview-theme'
+import { settingsStore } from '~/stores/settings-store'
+
 // ─── Module-level pool state ───────────────────────────────────────
 let poolContainer: HTMLDivElement | null = null
 function ensurePoolContainer(): HTMLDivElement {
@@ -53,6 +56,9 @@ function createPooledWebview(
     pointer-events: auto;
   `
   container.appendChild(el)
+
+  // Apply current theme to the new webview
+  sendThemeToWebview(el, settingsStore.state.theme)
 
   const record = { el, src, partition, visible: false }
   webviewPool.set(id, record)
@@ -181,3 +187,4 @@ export function useWebviewSlot(id: string, src: string, partition: string) {
 export function destroyWebview(id: string) {
   removeWebview(id)
 }
+

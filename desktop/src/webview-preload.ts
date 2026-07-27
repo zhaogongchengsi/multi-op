@@ -22,6 +22,16 @@ contextBridge.exposeInMainWorld('webviewBridge', {
   },
 })
 
+// ─── Theme synchronization ───────────────────────────────────────
+// Listen for theme-change sent from host via webview.send()
+ipcRenderer.on('theme-change', (_event: Electron.IpcRendererEvent, mode: 'light' | 'dark' | 'system') => {
+  const resolved = mode === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : mode
+  document.documentElement.style.colorScheme = resolved
+  document.documentElement.setAttribute('data-theme', resolved)
+})
+
 // Notify main process when a page finishes loading
 document.addEventListener('DOMContentLoaded', () => {
   ipcRenderer.send('webview:ready', {

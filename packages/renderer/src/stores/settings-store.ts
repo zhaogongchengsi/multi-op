@@ -1,4 +1,5 @@
 import { Store } from '@tanstack/react-store'
+import { broadcastThemeToWebviews } from '~/utils/webview-theme'
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -50,12 +51,18 @@ export async function loadSettings(): Promise<void> {
       config.read('settings.app'),
     ])
 
+    const theme = (themeResult?.data as { mode?: ThemeMode })?.mode ?? settingsStore.state.theme
+
     settingsStore.setState(s => ({
       ...s,
-      theme: (themeResult?.data as { mode?: ThemeMode })?.mode ?? s.theme,
+      theme,
       launchAtStartup: (appResult?.data as { launchAtStartup?: boolean })?.launchAtStartup ?? s.launchAtStartup,
       loaded: true,
     }))
+
+    // Apply loaded theme to nativeTheme and webviews
+    applyNativeTheme(theme)
+    broadcastThemeToWebviews(theme)
   } catch {
     settingsStore.setState(s => ({ ...s, loaded: true }))
   }
@@ -68,6 +75,14 @@ export async function setTheme(mode: ThemeMode): Promise<void> {
   const config = CONFIG()
   if (!config) return
   config.write('settings.theme', { mode }).catch(() => {})
+
+  applyNativeTheme(mode)
+  broadcastThemeToWebviews(mode)
+}
+
+/** Apply theme to nativeTheme.themeSource via IPC. */
+function applyNativeTheme(mode: ThemeMode) {
+  window.bridge?.services?.theme?.setNative(mode)
 }
 
 /** Set auto-launch preference and persist. */
