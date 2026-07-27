@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useWorkspaces } from '~/stores/workspace'
+import { useStore } from '@tanstack/react-store'
+import { workspaceStore, selectChat } from '~/stores/workspace-store'
 import { PLATFORM_META } from '@multi-op/shared'
 import { useWebviewSlot } from '~/hooks/useWebviewSlot'
 
@@ -18,7 +19,7 @@ const PLATFORM_URLS: Record<string, string> = {
 
 function ChatView() {
   const { chatId } = Route.useParams()
-  const { state, selectChat } = useWorkspaces()
+  const workspaces = useStore(workspaceStore, s => s.workspaces)
   const numericId = Number(chatId)
 
   // ─── Switching indicator ───────────────────────────────────────
@@ -36,7 +37,7 @@ function ChatView() {
   }, [numericId, selectChat])
 
   // Find the chat across all workspaces
-  const allChats = state.workspaces.flatMap(w => w.chats)
+  const allChats = workspaces.flatMap(w => w.chats)
   const chat = allChats.find(c => c.id === numericId)
 
   if (!chat) {

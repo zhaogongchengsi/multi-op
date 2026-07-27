@@ -24,8 +24,9 @@ import {TextInput} from '@astryxdesign/core/TextInput'
 import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
 import {Button} from '@astryxdesign/core/Button'
 import {PLATFORMS, PLATFORM_LABEL, PLATFORM_META} from '@multi-op/shared'
-import {useWorkspaces} from '../stores/workspace'
-import type { Workspace, Chat, ChatStatus } from '../stores/workspace'
+import { useStore } from '@tanstack/react-store'
+import { workspaceStore, createChat, createWorkspace, deleteChat, moveChat, renameChat, selectChat } from '../stores/workspace-store'
+import type { Workspace, Chat, ChatStatus } from '../stores/workspace-store'
 
 // ─── Platform icon ────────────────────────────────────────────────
 const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'svg'>>> = {
@@ -78,9 +79,9 @@ function ConversationItem({
   const [isGroupOpen, setIsGroupOpen] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
   const [isCreatingGroup, setIsCreatingGroup] = useState(false)
-  const { state, renameChat, deleteChat, createWorkspace, moveChat } = useWorkspaces()
+  const workspaces = useStore(workspaceStore, s => s.workspaces)
   const showMenu = isHovered || isMenuOpen
-  const realGroups = state.workspaces.filter(w => w.id !== -1)
+  const realGroups = workspaces.filter(w => w.id !== -1)
 
   const handleRename = () => {
     setRenameValue(chat.title)
@@ -248,8 +249,8 @@ function WorkspaceGroup({
 // ─── Top-level Sidebar Workspaces List ───────────────────────────
 export function SidebarWorkspaces() {
   const navigate = useNavigate()
-  const {state, selectChat, createChat, createWorkspace, moveChat} = useWorkspaces()
-  const {workspaces, selectedChatId} = state
+  const workspaces = useStore(workspaceStore, s => s.workspaces)
+  const selectedChatId = useStore(workspaceStore, s => s.selectedChatId)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
   const [groupName, setGroupName] = useState('')

@@ -8,8 +8,7 @@ import {
   SideNavSection,
 } from '@astryxdesign/core/SideNav'
 import { Cog6ToothIcon, MinusIcon, Square2StackIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import {WorkspaceProvider} from '~/stores/workspace'
-import {CustomAddressProvider, useCustomAddresses} from '~/stores/custom-address'
+import { loadAll } from '~/stores/workspace-store'
 import { SidebarWorkspaces } from '~/components/SidebarWorkspaces'
 import { SettingsDialog } from '~/components/SettingsDialog'
 
@@ -28,9 +27,15 @@ function ShellLayout() {
   const handleMaximize = useCallback(() => window.windowControls?.maximize(), [])
   const handleClose = useCallback(() => window.windowControls?.close(), [])
 
+  // Init workspace data on mount
+  useEffect(() => {
+    if (window.bridge) {
+      loadAll()
+    }
+  }, [])
+
   return (
-    <WorkspaceProvider>
-      <CustomAddressProvider>
+    <>
       <div className="w-screen h-screen">
         <AppShell
           variant="surface"
@@ -81,8 +86,7 @@ function ShellLayout() {
         </AppShell>
       </div>
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
-      </CustomAddressProvider>
-    </WorkspaceProvider>
+    </>
   )
 }
 

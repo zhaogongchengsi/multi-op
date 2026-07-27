@@ -18,7 +18,8 @@ import {
   BookmarkIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
-import { useCustomAddresses } from '~/stores/custom-address'
+import { useStore } from '@tanstack/react-store'
+import { customAddressStore, addAddress, removeAddress } from '~/stores/custom-address-store'
 import stylex from '@stylexjs/stylex'
 
 
@@ -131,7 +132,7 @@ function AboutTab() {
 // ─── Custom address management tab ───────────────────────────────
 
 function CustomAddressesTab() {
-  const { state, addAddress, removeAddress } = useCustomAddresses()
+  const addresses = useStore(customAddressStore, s => s.addresses)
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
   const [iconPreview, setIconPreview] = useState<string | null>(null)
@@ -183,11 +184,11 @@ function CustomAddressesTab() {
         </FormLayout>
       </Section>
 
-      {state.addresses.length > 0 && (
+      {addresses.length > 0 && (
         <Section dividers={['bottom']}>
-          <Heading level={4}>Saved Addresses ({state.addresses.length})</Heading>
+          <Heading level={4}>Saved Addresses ({addresses.length})</Heading>
           <div className="flex flex-col gap-2">
-            {state.addresses.map(addr => (
+            {addresses.map(addr => (
               <div key={addr.id} className="flex items-center gap-3 p-2 rounded-md border border-gray-200">
                 {addr.icon ? (
                   <img src={addr.icon} alt={addr.name} className="size-6 rounded object-cover shrink-0" />
