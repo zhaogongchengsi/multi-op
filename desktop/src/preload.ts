@@ -94,6 +94,17 @@ const groupAPI = {
     requestor.delete(`groups/${id}`).json(),
 }
 
+// ─── Config API ───────────────────────────────────────────────────
+const configAPI = {
+  /** Read config by prefix, returns unflattened object */
+  read: (prefix: string): Promise<{ data: Record<string, unknown> }> =>
+    requestor.get(`config/${prefix}`).json(),
+
+  /** Write config by prefix, accepts nested object */
+  write: (prefix: string, data: Record<string, unknown>): Promise<{ success: boolean }> =>
+    requestor.put(`config/${prefix}`, { json: data }).json(),
+}
+
 
 
 const preloadPath = join(__dirname, 'preload.mjs')
@@ -110,6 +121,7 @@ const webviewPreloadPath = join(__dirname, 'webview-preload.cjs')
       requestor,
       session: sessionAPI,
       group: groupAPI,
+      config: configAPI,
     },
   })
 

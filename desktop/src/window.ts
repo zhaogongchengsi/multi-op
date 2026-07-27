@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import type { HolixProtocolRouter } from '@holix/router'
 import { AppLifecycle } from '@multi-op/core'
+import { readConfig, writeConfigDebounced } from '@multi-op/database'
 import { SCHEME } from '@multi-op/shared'
 import { logger } from './logger.js'
 
@@ -28,9 +29,14 @@ export async function createAppWindow(options: WindowOptions): Promise<BrowserWi
 
   const isMac = process.platform === 'darwin'
 
+  // Restore saved window bounds
+  const savedBounds = await loadWindowBounds()
+
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: savedBounds.width ?? 1200,
+    height: savedBounds.height ?? 800,
+    ...(savedBounds.x != null ? { x: savedBounds.x } : {}),
+    ...(savedBounds.y != null ? { y: savedBounds.y } : {}),
     icon: iconPath,
     title: 'MultiOp',
     show: false,
@@ -53,6 +59,20 @@ export async function createAppWindow(options: WindowOptions): Promise<BrowserWi
   logger.info('BrowserWindow created')
 
   await registerProtocol(win, router)
+
+  // Persist window bounds on resize/move (debounced via @tanstack/pacer)
+  const persistBounds = () => {
+    if (win.isDestroyed()) return
+    const bounds = win.getBounds()
+    writeConfigDebounced('window', {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+    })
+  }
+  win.on('resize', persistBounds)
+  win.on('move', persistBounds)
 
   win.on('closed', () => {
     logger.info('Window closed, stopping lifecycle')
@@ -92,5 +112,23 @@ async function loadContent(win: BrowserWindow): Promise<void> {
     const url = `${SCHEME}://app/`
     logger.info('Loading production URL:', url)
     win.loadURL(url)
+  }
+}
+
+// ─── Window bounds persistence ──────────────────────────────────
+
+interface WindowBounds {
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+}
+
+async function loadWindowBounds(): Promise<WindowBounds> {
+  try {
+    const bounds = await readConfig('window')
+    return bounds as WindowBounds
+  } catch {
+    return {}
   }
 }

@@ -45,11 +45,17 @@ declare global {
     reorder: (id: number, position: number) => Promise<{ success: boolean }>
   }
 
+  interface ConfigAPI {
+    read: (prefix: string) => Promise<{ data: Record<string, unknown> }>
+    write: (prefix: string, data: Record<string, unknown>) => Promise<{ success: boolean }>
+  }
+
   interface BridgeServices {
     SCHEME_URL: string
     requestor: import('ky').KyInstance
     session: SessionAPI
     group: GroupAPI
+    config: ConfigAPI
   }
 
   interface Window {
