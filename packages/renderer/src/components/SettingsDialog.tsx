@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog'
 import { Layout, LayoutContent, LayoutFooter, LayoutPanel, HStack } from '@astryxdesign/core/Layout'
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav'
 import { Section } from '@astryxdesign/core/Section'
 import { FormLayout } from '@astryxdesign/core/FormLayout'
 import {
@@ -18,6 +19,17 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 import { useCustomAddresses } from '~/stores/custom-address'
+import stylex from '@stylexjs/stylex'
+
+
+const styles = stylex.create({
+  dialogContent: {
+    height: '55vh',
+  },
+  layoutPanel: {
+    padding: '0.5rem',
+  }
+})
 
 // ─── Vertical nav config ─────────────────────────────────────────
 
@@ -228,10 +240,10 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
     <Dialog
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      width={640}
+      width={800}
       purpose="form"
     >
-      <div className="min-h-[380px]">
+      <div className="min-h-95 flex flex-col">
         <Layout
           height="fill"
           header={
@@ -241,37 +253,30 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
               onOpenChange={onOpenChange}
             />
           }
+          xstyle={styles.dialogContent}
           start={
-            <LayoutPanel width={200} hasDivider>
-              <div className="flex flex-col h-full">
-                <div className="px-3 pt-2 pb-1">
-                  <Text type="label" color="secondary">Preferences</Text>
-                </div>
-                <div className="flex flex-col gap-0.5 px-2 flex-1">
+            <LayoutPanel hasDivider xstyle={styles.layoutPanel}>
+              <SideNav className="h-full">
+                <SideNavSection title="Preferences">
                   {NAV_ITEMS.map(item => {
                     const Icon = item.icon
                     const isActive = activeTab === item.value
                     return (
-                      <button
+                      <SideNavItem
                         key={item.value}
-                        type="button"
-                        className={`flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer border-none relative ${
-                          isActive
-                            ? 'bg-blue-50 text-blue-700 shadow-sm'
-                            : 'text-gray-600 hover:bg-gray-100/80 hover:text-gray-900'
-                        }`}
-                        onClick={() => setActiveTab(item.value)}
-                      >
-                        {isActive && (
-                          <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-blue-600" />
-                        )}
-                        <Icon className={`size-4 shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
-                        <span>{item.label}</span>
-                      </button>
+                        label={item.label}
+                        icon={Icon}
+                        isSelected={isActive}
+                        href="void:;"
+                        onClick={(e: React.MouseEvent) => {
+                          e.preventDefault()
+                          setActiveTab(item.value)
+                        }}
+                      />
                     )
                   })}
-                </div>
-              </div>
+                </SideNavSection>
+              </SideNav>
             </LayoutPanel>
           }
           content={renderTabContent()}
