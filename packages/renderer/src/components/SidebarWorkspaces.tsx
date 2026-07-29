@@ -119,31 +119,35 @@ function ConversationItem({
     <>
       <Stack
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}>
+        onMouseLeave={() => setIsHovered(false)}
+        className="relative">
         <SideNavItem
           label={chat.title}
           isSelected={isSelected}
           onClick={onSelect}
           icon={<PlatformIcon platform={chat.platform} />}
           endContent={
-            showMenu ? (
-              <MoreMenu
-                size="sm"
-                label="Conversation options"
-                onOpenChange={setIsMenuOpen}
-                items={[
-                  { label: 'Pin', onClick: () => { } },
-                  { label: 'Rename', onClick: handleRename },
-                  { label: 'Move to group', onClick: () => setIsGroupOpen(true) },
-                  { label: 'Archive', onClick: () => { } },
-                  { label: 'Delete', onClick: () => deleteChat(chat.id) },
-                ]}
-              />
-            ) : (
+            showMenu ? null : (
               <StatusDot variant={statusVariant(chat.status)} label={chat.status} />
             )
           }
         />
+        {showMenu && (
+          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+            <MoreMenu
+              size="sm"
+              label="Conversation options"
+              onOpenChange={setIsMenuOpen}
+              items={[
+                { label: 'Pin', onClick: () => { } },
+                { label: 'Rename', onClick: handleRename },
+                { label: 'Move to group', onClick: () => setIsGroupOpen(true) },
+                { label: 'Archive', onClick: () => { } },
+                { label: 'Delete', onClick: () => deleteChat(chat.id) },
+              ]}
+            />
+          </div>
+        )}
       </Stack>
 
       {/* Rename dialog */}
