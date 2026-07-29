@@ -3,6 +3,7 @@ import { Tab, TabList } from '@astryxdesign/core';
 import { MinusIcon, Square2StackIcon, XMarkIcon, LockClosedIcon } from '@heroicons/react/16/solid';
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
+import { setActiveWebview } from '~/stores/webview-store';
 import { useNavigate } from '@tanstack/react-router';
 import { collapsible } from '~/stores/collapsible';
 import { destroyWebview } from '~/hooks/useWebviewSlot';
@@ -15,6 +16,7 @@ export default function TopNav() {
 	const [isMaximized, setIsMaximized] = useState(false)
 	const navigate = useNavigate()
 	const activeWebviews = useSelector(webviewStore, s => s.webviews)
+	const activeWebviewId = useSelector(webviewStore, s => s.activeWebviewId ?? "")
 	useEffect(() => {
 		if (!window.windowControls) return
 		window.windowControls.onMaximizedChange(setIsMaximized)
@@ -25,7 +27,6 @@ export default function TopNav() {
 	const isCollapsible = useSelector(collapsible)
 	const workspaces = useSelector(workspaceStore, s => s.workspaces)
 	const allChats = workspaces.flatMap(w => w.chats)
-	const [value, setValue] = useState('');
 
 	const handleCloseWebview = useCallback((e: React.MouseEvent, webviewId: string) => {
 		e.stopPropagation()
@@ -38,20 +39,20 @@ export default function TopNav() {
 
 	const handleSelectWebview = useCallback((chatId: number, webviewId: string) => {
 		navigate({ to: '/chat/$chatId', params: { chatId: String(chatId) } })
-		setValue(`webview-${webviewId}`)
+		console.log('handleSelectWebview', chatId, webviewId)
+		setActiveWebview(webviewId)
 	}, [navigate])
 
 	return <div className="w-full py-1 flex items-center justify-between px-4 app-shell-top-nav" style={{ height: 'var(--app-top-nav-height)' }}>
 		<div className="flex items-center gap-2" style={{ marginLeft: isCollapsible ? '80px' :  '250px' }}>
-			<TabList value={value} onChange={setValue} className="select-none">
-				{activeWebviews.map((w, i) => {
+			<TabList value={activeWebviewId } onChange={setActiveWebview} className="select-none">
+				{activeWebviews.map((w) => {
 					const chat = allChats.find(c => c.id === w.chatId)
-					const tabValue = `webview-${w.id}`
 					const label = chat?.title ?? w.platform
 					return (
 						<Tab
 							key={w.id}
-							value={tabValue}
+							value={String(w.id)}
 							label={label}
 							onClick={() => handleSelectWebview(w.chatId, w.id)}
 							endContent={

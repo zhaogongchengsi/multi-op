@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useStore } from '@tanstack/react-store'
+import { useSelector } from '@tanstack/react-store'
 import { workspaceStore, selectChat } from '~/stores/workspace-store'
 import { PLATFORM_META } from '@multi-op/shared'
 import { useWebviewSlot } from '~/hooks/useWebviewSlot'
@@ -16,10 +16,9 @@ const PLATFORM_URLS: Record<string, string> = {
   twitter: 'https://x.com',
 }
 
-
 function ChatView() {
   const { chatId } = Route.useParams()
-  const workspaces = useStore(workspaceStore, s => s.workspaces)
+  const workspaces = useSelector(workspaceStore, s => s.workspaces)
   const numericId = Number(chatId)
 
   // ─── Switching indicator ───────────────────────────────────────

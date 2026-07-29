@@ -8,10 +8,12 @@ export interface ActiveWebview {
 
 export interface WebviewState {
   webviews: ActiveWebview[]
+  activeWebviewId: string | null
 }
 
 export const webviewStore = new Store<WebviewState>({
   webviews: [],
+  activeWebviewId: null,
 })
 
 function parseWebviewId(id: string): { chatId: number; platform: string } | null {
@@ -38,5 +40,12 @@ export function removeWebview(id: string) {
   webviewStore.setState(s => ({
     ...s,
     webviews: s.webviews.filter(w => w.id !== id),
+  }))
+}
+
+export function setActiveWebview(id: string | null) {
+  webviewStore.setState(s => ({
+    ...s,
+    activeWebviewId: id,
   }))
 }

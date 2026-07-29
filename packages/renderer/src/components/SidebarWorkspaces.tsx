@@ -24,10 +24,11 @@ import { TextInput } from '@astryxdesign/core/TextInput'
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout'
 import { Button } from '@astryxdesign/core/Button'
 import { PLATFORMS, PLATFORM_LABEL, PLATFORM_META } from '@multi-op/shared'
-import { useStore } from '@tanstack/react-store'
+import { useSelector } from '@tanstack/react-store'
 import { workspaceStore, createChat, createWorkspace, deleteChat, moveChat, renameChat, selectChat } from '../stores/workspace-store'
 import type { Workspace, Chat, ChatStatus } from '../stores/workspace-store'
 import { customAddressStore } from '../stores/custom-address-store';
+import { setActiveWebview } from '~/stores/webview-store';
 
 // ─── Platform icon ────────────────────────────────────────────────
 const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'svg'>>> = {
@@ -80,7 +81,7 @@ function ConversationItem({
   const [isGroupOpen, setIsGroupOpen] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
   const [isCreatingGroup, setIsCreatingGroup] = useState(false)
-  const workspaces = useStore(workspaceStore, s => s.workspaces)
+  const workspaces = useSelector(workspaceStore, s => s.workspaces)
   const showMenu = isHovered || isMenuOpen
   const realGroups = workspaces.filter(w => w.id !== -1)
 
@@ -121,7 +122,6 @@ function ConversationItem({
         onMouseLeave={() => setIsHovered(false)}>
         <SideNavItem
           label={chat.title}
-          href="#"
           isSelected={isSelected}
           onClick={onSelect}
           icon={<PlatformIcon platform={chat.platform} />}
@@ -225,7 +225,7 @@ function WorkspaceGroup({
 }: {
   workspace: Workspace
   selectedChatId: number | null
-  onSelectChat: (id: number) => void
+  onSelectChat: (chat: Chat) => void
 }) {
   return (
     <SideNavItem
@@ -239,7 +239,7 @@ function WorkspaceGroup({
             key={chat.id}
             chat={chat}
             isSelected={chat.id === selectedChatId}
-            onSelect={() => onSelectChat(chat.id)}
+            onSelect={() => onSelectChat(chat)}
           />
         ))}
       </VStack>
@@ -250,8 +250,8 @@ function WorkspaceGroup({
 // ─── Top-level Sidebar Workspaces List ───────────────────────────
 export function SidebarWorkspaces() {
   const navigate = useNavigate()
-  const workspaces = useStore(workspaceStore, s => s.workspaces)
-  const selectedChatId = useStore(workspaceStore, s => s.selectedChatId)
+  const workspaces = useSelector(workspaceStore, s => s.workspaces)
+  const selectedChatId = useSelector(workspaceStore, s => s.selectedChatId)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
   const [groupName, setGroupName] = useState('')
@@ -261,11 +261,15 @@ export function SidebarWorkspaces() {
   const ungrouped = workspaces.find(ws => ws.id === -1)?.chats ?? []
 
 
-  const customAddressStoreState = useStore(customAddressStore, s => s.addresses)
+  const customAddressStoreState = useSelector(customAddressStore, s => s.addresses)
 
-  const handleSelectChat = (chatId: number) => {
+  const handleSelectChat = (chat: Chat) => {
+    const chatId = chat.id
+    const platform = chat.platform
+    console.log('handleSelectChat', chatId)
     selectChat(chatId)
     navigate({ to: '/chat/$chatId', params: { chatId: String(chatId) } })
+    setActiveWebview(`chat-${platform}-${chatId}`)
   }
 
   const handleNewChat = (platform: string) => {
@@ -329,7 +333,7 @@ export function SidebarWorkspaces() {
                 key={chat.id}
                 chat={chat}
                 isSelected={chat.id === selectedChatId}
-                onSelect={() => handleSelectChat(chat.id)}
+                onSelect={() => handleSelectChat(chat)}
               />
             ))}
           </VStack>
