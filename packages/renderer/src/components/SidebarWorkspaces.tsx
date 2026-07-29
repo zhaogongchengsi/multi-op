@@ -360,6 +360,7 @@ export function SidebarWorkspaces() {
                     }</Button>
                 ))}
                 {
+                  customAddressStoreState.length > 0 &&
                   customAddressStoreState.map(addr => (
                     <Button
                       key={addr.id}

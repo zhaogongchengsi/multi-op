@@ -26,8 +26,8 @@ export function GeneralTab() {
 
   return (
     <LayoutContent>
-      <Section dividers={['bottom']}>
-        <Heading level={4}>Appearance</Heading>
+      <Section dividers={['bottom']} >
+        <Heading level={4} className="mb-2!">Appearance</Heading>
         <FormLayout>
           <SegmentedControl
             label="Theme"
@@ -43,7 +43,7 @@ export function GeneralTab() {
       </Section>
 
       <Section dividers={['bottom']}>
-        <Heading level={4}>Startup & Window</Heading>
+        <Heading level={4} className="mb-2!">Startup & Window</Heading>
         <FormLayout>
           <SegmentedControl
             label="Default layout"
