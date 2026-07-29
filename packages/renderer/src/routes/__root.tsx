@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { Theme } from '@astryxdesign/core/theme'
 import { neutralTheme } from '@astryxdesign/theme-neutral/built'
@@ -7,7 +7,6 @@ import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
 import {
   SideNav,
   SideNavItem,
-  SideNavSection,
 } from '@astryxdesign/core/SideNav'
 import { Cog6ToothIcon, MinusIcon, Square2StackIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { loadAll } from '~/stores/workspace-store'
@@ -16,22 +15,32 @@ import { loadCustomAddresses } from '~/stores/custom-address-store'
 import { useStore } from '@tanstack/react-store'
 import { SidebarWorkspaces } from '~/components/SidebarWorkspaces'
 import { SettingsDialog } from '~/components/SettingsDialog'
+import TopNav from '~/components/topnav/topnav';
 
-const isWin = navigator.platform.startsWith('Win')
 
 function ShellLayout() {
-  const [isMaximized, setIsMaximized] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const theme = useStore(settingsStore, selectTheme)
+  const shellRef = useRef<HTMLDivElement>(null)
 
+  // Track sidebar width and expose it as a CSS custom property for TopNav
   useEffect(() => {
-    if (!window.windowControls) return
-    window.windowControls.onMaximizedChange(setIsMaximized)
-  }, [])
+    const container = shellRef.current
+    if (!container) return
 
-  const handleMinimize = useCallback(() => window.windowControls?.minimize(), [])
-  const handleMaximize = useCallback(() => window.windowControls?.maximize(), [])
-  const handleClose = useCallback(() => window.windowControls?.close(), [])
+    const updateWidth = () => {
+      const nav = container.querySelector<HTMLElement>('[role="navigation"]')
+      if (nav) {
+        container.style.setProperty('--side-nav-width', `${nav.offsetWidth}px`)
+      }
+    }
+
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    const nav = container.querySelector<HTMLElement>('[role="navigation"]')
+    if (nav) observer.observe(nav)
+    return () => observer.disconnect()
+  }, [])
 
   // Init all data on mount
   useEffect(() => {
@@ -44,26 +53,12 @@ function ShellLayout() {
 
   return (
     <Theme theme={neutralTheme} mode={theme}>
-      <div className="w-screen h-screen">
+      <div ref={shellRef} className="w-screen h-screen">
         <AppShell
           variant="surface"
           contentPadding={0}
           topNav={
-            <div className="w-full h-12 flex items-center justify-between px-4 app-shell-top-nav">
-              {
-                isWin && <div className="title-bar-controls">
-                  <button className="title-bar-btn" onClick={handleMinimize} aria-label="Minimize">
-                    <MinusIcon className="size-3.5" />
-                  </button>
-                  <button className="title-bar-btn" onClick={handleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
-                    <Square2StackIcon className="size-3.5" />
-                  </button>
-                  <button className="title-bar-btn title-bar-close" onClick={handleClose} aria-label="Close">
-                    <XMarkIcon className="size-3.5" />
-                  </button>
-                </div>
-              }
-            </div>
+            <TopNav />
           }
           sideNav={
             <SideNav

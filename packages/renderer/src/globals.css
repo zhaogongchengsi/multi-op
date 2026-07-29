@@ -43,6 +43,14 @@
   -webkit-app-region: drag;
 }
 
+.app-shell-top-nav .title-bar-controls {
+  -webkit-app-region: no-drag;
+}
+
+.app-shell-top-nav button {
+  -webkit-app-region: no-drag;
+}
+
 /* 侧边栏顶部标题区域可作为窗口拖拽手柄 */
 [data-platform='macos'] .astryx-side-nav-heading {
   -webkit-app-region: drag;

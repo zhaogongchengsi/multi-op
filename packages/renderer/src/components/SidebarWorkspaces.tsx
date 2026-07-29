@@ -306,7 +306,6 @@ export function SidebarWorkspaces() {
         <SideNavItem
           label="New group"
           icon={FolderPlusIcon}
-          href="#"
           onClick={(e: React.MouseEvent) => {
             e.preventDefault()
             setIsGroupDialogOpen(true)
