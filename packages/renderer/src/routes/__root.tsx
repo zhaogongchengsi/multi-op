@@ -73,7 +73,6 @@ function ShellLayout() {
                 <SideNavItem
                   label="Settings"
                   icon={Cog6ToothIcon}
-                  href="void:;"
                   onClick={(e: React.MouseEvent) => {
                     e.preventDefault()
                     setIsSettingsOpen(true)

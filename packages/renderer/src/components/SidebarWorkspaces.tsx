@@ -1,5 +1,5 @@
-import {useState} from 'react'
-import {useNavigate} from '@tanstack/react-router'
+import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -10,23 +10,24 @@ import {
   HashtagIcon,
   ChatBubbleLeftEllipsisIcon,
 } from '@heroicons/react/24/outline'
-import {Divider} from '@astryxdesign/core/Divider'
+import { Divider } from '@astryxdesign/core/Divider'
 import {
   SideNavItem,
   SideNavSection,
 } from '@astryxdesign/core/SideNav'
-import {MoreMenu} from '@astryxdesign/core/MoreMenu'
-import {StatusDot} from '@astryxdesign/core/StatusDot'
-import type {StatusDotVariant} from '@astryxdesign/core/StatusDot'
-import {Stack, VStack} from '@astryxdesign/core/Stack'
-import {Dialog, DialogHeader} from '@astryxdesign/core/Dialog'
-import {TextInput} from '@astryxdesign/core/TextInput'
-import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
-import {Button} from '@astryxdesign/core/Button'
-import {PLATFORMS, PLATFORM_LABEL, PLATFORM_META} from '@multi-op/shared'
+import { MoreMenu } from '@astryxdesign/core/MoreMenu'
+import { StatusDot } from '@astryxdesign/core/StatusDot'
+import type { StatusDotVariant } from '@astryxdesign/core/StatusDot'
+import { Stack, VStack } from '@astryxdesign/core/Stack'
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog'
+import { TextInput } from '@astryxdesign/core/TextInput'
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout'
+import { Button } from '@astryxdesign/core/Button'
+import { PLATFORMS, PLATFORM_LABEL, PLATFORM_META } from '@multi-op/shared'
 import { useStore } from '@tanstack/react-store'
 import { workspaceStore, createChat, createWorkspace, deleteChat, moveChat, renameChat, selectChat } from '../stores/workspace-store'
 import type { Workspace, Chat, ChatStatus } from '../stores/workspace-store'
+import { customAddressStore } from '../stores/custom-address-store';
 
 // ─── Platform icon ────────────────────────────────────────────────
 const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'svg'>>> = {
@@ -131,11 +132,11 @@ function ConversationItem({
                 label="Conversation options"
                 onOpenChange={setIsMenuOpen}
                 items={[
-                  {label: 'Pin', onClick: () => {}},
-                  {label: 'Rename', onClick: handleRename},
-                  {label: 'Move to group', onClick: () => setIsGroupOpen(true)},
-                  {label: 'Archive', onClick: () => {}},
-                  {label: 'Delete', onClick: () => deleteChat(chat.id)},
+                  { label: 'Pin', onClick: () => { } },
+                  { label: 'Rename', onClick: handleRename },
+                  { label: 'Move to group', onClick: () => setIsGroupOpen(true) },
+                  { label: 'Archive', onClick: () => { } },
+                  { label: 'Delete', onClick: () => deleteChat(chat.id) },
                 ]}
               />
             ) : (
@@ -231,7 +232,7 @@ function WorkspaceGroup({
       key={workspace.name}
       label={workspace.name}
       icon={FolderIcon}
-      collapsible={{defaultIsCollapsed: false}}>
+      collapsible={{ defaultIsCollapsed: false }}>
       <VStack gap={0.5}>
         {workspace.chats.map(chat => (
           <ConversationItem
@@ -258,6 +259,9 @@ export function SidebarWorkspaces() {
 
   const realGroups = workspaces.filter(ws => ws.id !== -1)
   const ungrouped = workspaces.find(ws => ws.id === -1)?.chats ?? []
+
+
+  const customAddressStoreState = useStore(customAddressStore, s => s.addresses)
 
   const handleSelectChat = (chatId: number) => {
     selectChat(chatId)
@@ -293,7 +297,6 @@ export function SidebarWorkspaces() {
         <SideNavItem
           label="New chat"
           icon={PlusIcon}
-          href="#"
           onClick={(e: React.MouseEvent) => {
             e.preventDefault()
             setIsDialogOpen(true)
@@ -339,13 +342,12 @@ export function SidebarWorkspaces() {
           header={<DialogHeader title="New session" onOpenChange={setIsDialogOpen} />}
           content={
             <LayoutContent>
-              <Stack direction="horizontal" gap={1} justify="center" wrap="nowrap">
+              <Stack direction="vertical" gap={1} justify="center" wrap="nowrap">
                 {PLATFORMS.map(p => (
                   <Button
                     key={p}
                     label={PLATFORM_LABEL[p]}
                     variant="secondary"
-                    isIconOnly
                     onClick={() => handleNewChat(p)}
                     icon={
                       (() => {
@@ -353,8 +355,28 @@ export function SidebarWorkspaces() {
                         return <Icon style={{ color: PLATFORM_META[p].color }} className="w-5 h-5" />
                       })()
                     }
-                  />
+                  >{
+                      PLATFORM_LABEL[p]
+                    }</Button>
                 ))}
+                {
+                  customAddressStoreState.map(addr => (
+                    <Button
+                      key={addr.id}
+                      label={addr.name}
+                      variant="secondary"
+                      onClick={() => handleNewChat(addr.url)}
+                      icon={
+                        (() => {
+                          const Icon = addr.icon ? () => <img src={addr.icon!} className="w-5 h-5 rounded-full" /> : ChatBubbleLeftEllipsisIcon
+                          return <Icon className="w-5 h-5" />
+                        })()
+                      }
+                    >{
+                        addr.name
+                      }</Button>
+                  ))
+                }
               </Stack>
             </LayoutContent>
           }
