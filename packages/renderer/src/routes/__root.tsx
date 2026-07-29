@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { Theme } from '@astryxdesign/core/theme'
 import { neutralTheme } from '@astryxdesign/theme-neutral/built'
-import {AppShell} from '@astryxdesign/core/AppShell'
-import {Layout, LayoutContent} from '@astryxdesign/core/Layout'
+import { AppShell } from '@astryxdesign/core/AppShell'
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout'
 import {
   SideNav,
   SideNavItem,
@@ -12,16 +12,18 @@ import { Cog6ToothIcon, MinusIcon, Square2StackIcon, XMarkIcon } from '@heroicon
 import { loadAll } from '~/stores/workspace-store'
 import { loadSettings, settingsStore, selectTheme } from '~/stores/settings-store'
 import { loadCustomAddresses } from '~/stores/custom-address-store'
-import { useStore } from '@tanstack/react-store'
+import { useSelector, useStore } from '@tanstack/react-store'
 import { SidebarWorkspaces } from '~/components/SidebarWorkspaces'
 import { SettingsDialog } from '~/components/SettingsDialog'
 import TopNav from '~/components/topnav/topnav';
+import { collapsible, setCollapsible } from '~/stores/collapsible';
 
 
 function ShellLayout() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const theme = useStore(settingsStore, selectTheme)
+  const theme = useSelector(settingsStore, selectTheme)
   const shellRef = useRef<HTMLDivElement>(null)
+  const isCollapsible = useSelector(collapsible)
 
   // Track sidebar width and expose it as a CSS custom property for TopNav
   useEffect(() => {
@@ -62,8 +64,13 @@ function ShellLayout() {
           }
           sideNav={
             <SideNav
-              collapsible
-              resizable={{defaultWidth: 300, minWidth: 220, maxWidth: 420}}
+              collapsible={
+                {
+                  isCollapsed: isCollapsible,
+                  onCollapsedChange: setCollapsible
+                }
+              }
+              // resizable={{ defaultWidth: 300, minWidth: 220, maxWidth: 420 }}
               footer={
                 <SideNavItem
                   label="Settings"
