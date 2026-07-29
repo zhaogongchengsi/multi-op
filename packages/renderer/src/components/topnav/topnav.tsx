@@ -1,31 +1,20 @@
 
-import { Button, Tab, TabList } from '@astryxdesign/core';
-import { MinusIcon, Square2StackIcon, XMarkIcon, LockClosedIcon, ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/16/solid';
+import { Tab, TabList } from '@astryxdesign/core';
+import { MinusIcon, Square2StackIcon, XMarkIcon, LockClosedIcon } from '@heroicons/react/16/solid';
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
+import { useNavigate } from '@tanstack/react-router';
 import { collapsible } from '~/stores/collapsible';
+import { destroyWebview } from '~/hooks/useWebviewSlot';
+import { workspaceStore } from '~/stores/workspace-store';
+import { webviewStore } from '~/stores/webview-store';
 
 const isWin = navigator.platform.startsWith('Win')
 
-const StarIcon = (
-	<svg
-		viewBox="0 0 16 16"
-		fill="none"
-		stroke="currentColor"
-		width="100%"
-		height="100%">
-		<path d="m8 1.5 2 4.1 4.5.7-3.3 3.2.8 4.5-4-2.1L4 14l.8-4.5-3.3-3.2 4.5-.7L8 1.5Z" />
-	</svg>
-);
-​
-const SelectedStarIcon = (
-	<svg viewBox="0 0 16 16" fill="currentColor" width="100%" height="100%">
-		<path d="m8 1.5 2 4.1 4.5.7-3.3 3.2.8 4.5-4-2.1L4 14l.8-4.5-3.3-3.2 4.5-.7L8 1.5Z" />
-	</svg>
-);
-
 export default function TopNav() {
 	const [isMaximized, setIsMaximized] = useState(false)
+	const navigate = useNavigate()
+	const activeWebviews = useSelector(webviewStore, s => s.webviews)
 	useEffect(() => {
 		if (!window.windowControls) return
 		window.windowControls.onMaximizedChange(setIsMaximized)
@@ -34,30 +23,46 @@ export default function TopNav() {
 	const handleMaximize = useCallback(() => window.windowControls?.maximize(), [])
 	const handleClose = useCallback(() => window.windowControls?.close(), [])
 	const isCollapsible = useSelector(collapsible)
-	// const [value, setValue] = useState('hourly');
+	const workspaces = useSelector(workspaceStore, s => s.workspaces)
+	const allChats = workspaces.flatMap(w => w.chats)
+	const [value, setValue] = useState('');
 
-	const [value, setValue] = useState('favorites');
+	const handleCloseWebview = useCallback((e: React.MouseEvent, webviewId: string) => {
+		e.stopPropagation()
+		destroyWebview(webviewId)
+		const remaining = activeWebviews.filter(w => w.id !== webviewId)
+		if (remaining.length === 0) {
+			navigate({ to: '/' })
+		}
+	}, [activeWebviews, navigate])
 
-	return <div className="w-full py-1 flex items-center justify-between px-4 app-shell-top-nav">
+	const handleSelectWebview = useCallback((chatId: number, webviewId: string) => {
+		navigate({ to: '/chat/$chatId', params: { chatId: String(chatId) } })
+		setValue(`webview-${webviewId}`)
+	}, [navigate])
+
+	return <div className="w-full py-1 flex items-center justify-between px-4 app-shell-top-nav" style={{ height: 'var(--app-top-nav-height)' }}>
 		<div className="flex items-center gap-2" style={{ marginLeft: isCollapsible ? '80px' :  '250px' }}>
-			{/* <Button isIconOnly icon={<HomeIcon className="size-3.5" />} label="home" ></Button> */}
-			{/* <SegmentedControl
-				value={value}
-				onChange={setValue}
-				label="Data granularity">
-				<SegmentedControlItem value="hourly" label="Hourly" />
-				<SegmentedControlItem value="daily" label="Daily" />
-				<SegmentedControlItem value="weekly" label="Weekly" />
-			</SegmentedControl> */}
 			<TabList value={value} onChange={setValue} className="select-none">
-				<Tab
-					value="favorites"
-					label="Favorites"
-					endContent={
-						<LockClosedIcon className="size-3.5" />
-					}
-				/>
-				<Tab value="recent" label="Recent" />
+				{activeWebviews.map((w, i) => {
+					const chat = allChats.find(c => c.id === w.chatId)
+					const tabValue = `webview-${w.id}`
+					const label = chat?.title ?? w.platform
+					return (
+						<Tab
+							key={w.id}
+							value={tabValue}
+							label={label}
+							onClick={() => handleSelectWebview(w.chatId, w.id)}
+							endContent={
+								<XMarkIcon
+									className="size-3.5 cursor-pointer hover:text-red-500"
+									onClick={(e: any) => handleCloseWebview(e, w.id)}
+								/>
+							}
+						/>
+					)
+				})}
 			</TabList>
 		</div>
 		{

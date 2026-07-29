@@ -9,6 +9,10 @@
   overflow-x: hidden !important;
 }
 
+:root {
+  --app-top-nav-height: 40px;
+}
+
 /* ─── 自定义标题栏 (Windows/Linux 无边框窗口) ─────── */
 
 .title-bar-controls {

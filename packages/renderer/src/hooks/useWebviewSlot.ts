@@ -2,6 +2,10 @@ import { useEffect, useRef, useCallback } from 'react'
 
 import { sendThemeToWebview } from '~/utils/webview-theme'
 import { settingsStore } from '~/stores/settings-store'
+import { addWebview, removeWebview as removeWebviewFromStore } from '~/stores/webview-store'
+
+// ─── Active webview tracking (for TopNav tabs) ────────────────────
+export type { ActiveWebview } from '~/stores/webview-store'
 
 // ─── Module-level pool state ───────────────────────────────────────
 let poolContainer: HTMLDivElement | null = null
@@ -25,6 +29,7 @@ const webviewPool = new Map<
   string,
   { el: HTMLElement; src: string; partition: string; visible: boolean }
 >()
+
 
 // True webview element — can be <webview> if tag is enabled, or <iframe> fallback
 function createPooledWebview(
@@ -62,6 +67,7 @@ function createPooledWebview(
 
   const record = { el, src, partition, visible: false }
   webviewPool.set(id, record)
+  addWebview(id)
   return el
 }
 
@@ -108,6 +114,7 @@ function removeWebview(id: string) {
 
   record.el.remove()
   webviewPool.delete(id)
+  removeWebviewFromStore(id)
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────
