@@ -4,7 +4,6 @@ import { useSelector } from '@tanstack/react-store'
 import { workspaceStore, selectChat } from '~/stores/workspace-store'
 import { PLATFORM_META } from '@multi-op/shared'
 import { useWebviewSlot } from '~/hooks/useWebviewSlot'
-import { customAddressStore } from '~/stores/custom-address-store';
 
 export const Route = createFileRoute('/chat/$chatId')({
   component: ChatView,
@@ -20,7 +19,6 @@ const PLATFORM_URLS: Record<string, string> = {
 function ChatView() {
   const { chatId } = Route.useParams()
   const workspaces = useSelector(workspaceStore, s => s.workspaces)
-  const customAddress = useSelector(customAddressStore, s => s.addresses)
   const numericId = Number(chatId)
 
   // ─── Switching indicator ───────────────────────────────────────
@@ -44,12 +42,19 @@ function ChatView() {
   console.log('ChatView', chat)
 
   // Compute slot values (may be undefined when chat not found)
-  let platformUrl = chat ? PLATFORM_URLS[chat.platform] ?? '' : ''
+  let platformUrl = ''
+
+  if (chat?.url) {
+    // Custom address with explicit URL stored
+    platformUrl = chat.url
+  } else if (chat) {
+    platformUrl = PLATFORM_URLS[chat.platform] ?? ''
+  }
 
   if (!platformUrl) {
-    const custom = customAddress.find((address) => address.id === chat?.platform)
-    if (custom) {
-      platformUrl = custom.url
+    // Legacy: platform stored as full URL (starts with http)
+    if (chat?.platform?.startsWith('http')) {
+      platformUrl = chat.platform
     }
   }
 

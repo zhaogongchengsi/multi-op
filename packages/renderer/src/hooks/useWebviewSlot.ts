@@ -177,6 +177,21 @@ export function useWebviewSlot(id: string, src: string, partition: string) {
     return () => window.removeEventListener('resize', onResize)
   }, [syncPosition])
 
+  // Update webview src/partition when they change without DOM node change
+  useEffect(() => {
+    if (!id || !src) return
+    const existing = webviewPool.get(id)
+    if (!existing) return
+    if (existing.src !== src) {
+      existing.el.setAttribute('src', src)
+      existing.src = src
+    }
+    if (existing.partition !== partition) {
+      existing.el.setAttribute('partition', partition)
+      existing.partition = partition
+    }
+  }, [id, src, partition])
+
   // Cleanup webview when hook unmounts permanently (key change = component fully gone)
   useEffect(() => {
     return () => {

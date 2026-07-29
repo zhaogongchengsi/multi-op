@@ -17,6 +17,7 @@ export const group = sqliteTable('groups', {
 export const session = sqliteTable('sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   platform: text('platform').notNull(),
+  url: text('url'),
   title: text('title'),
   avatar: text('avatar'),
   groupId: integer('group_id'),

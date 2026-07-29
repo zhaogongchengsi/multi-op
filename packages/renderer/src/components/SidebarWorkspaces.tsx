@@ -377,7 +377,16 @@ export function SidebarWorkspaces() {
                       key={addr.id}
                       label={addr.name}
                       variant="secondary"
-                      onClick={() => handleNewChat(addr.url)}
+                      onClick={() => {
+                        const domain = new URL(addr.url).hostname
+                        createChat(
+                          `${addr.name} Chat`,
+                          null,
+                          domain,
+                          addr.url,
+                        )
+                        setIsDialogOpen(false)
+                      }}
                       icon={
                         (() => {
                           const Icon = addr.icon ? () => <img src={addr.icon!} className="w-5 h-5 rounded-full" /> : ChatBubbleLeftEllipsisIcon

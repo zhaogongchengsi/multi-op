@@ -8,6 +8,7 @@ export interface Chat {
   title: string
   status: ChatStatus
   platform: string
+  url?: string
   groupId: number | null
 }
 
@@ -69,7 +70,7 @@ export async function loadAll() {
       bridge.services.session.list(),
     ])
 
-    type SessionRecord = { id: number; title?: string; status?: string | null; platform: string; groupId: number | null }
+    type SessionRecord = { id: number; title?: string; status?: string | null; platform: string; url?: string; groupId: number | null }
     const groupMap = new Map<number, SessionRecord[]>()
     for (const s of sessionRes.data as SessionRecord[]) {
       const key = s.groupId ?? -1
@@ -86,6 +87,7 @@ export async function loadAll() {
         title: s.title ?? 'Untitled',
         status: mapStatus(s.status ?? null),
         platform: s.platform,
+        url: s.url,
         groupId: s.groupId,
       })),
     }))
@@ -95,6 +97,7 @@ export async function loadAll() {
       title: s.title ?? 'Untitled',
       status: mapStatus(s.status ?? null),
       platform: s.platform,
+      url: s.url,
       groupId: s.groupId,
     }))
 
@@ -154,20 +157,23 @@ export async function createChat(
   title: string,
   groupId: number | null,
   platform: string = 'default',
+  url?: string,
 ) {
   try {
     const res = await window.bridge.services.session.create({
       platform,
+      url,
       title,
       groupId,
       status: 'active',
     })
-    const s = res.data as { id: number; title?: string; platform: string; groupId: number | null }
+    const s = res.data as { id: number; title?: string; platform: string; url?: string; groupId: number | null }
     const chat: Chat = {
       id: s.id,
       title: s.title ?? 'Untitled',
       status: 'active',
       platform: s.platform,
+      url: s.url,
       groupId: s.groupId,
     }
 
