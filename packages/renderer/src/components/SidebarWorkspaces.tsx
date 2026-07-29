@@ -29,6 +29,7 @@ import { workspaceStore, createChat, createWorkspace, deleteChat, moveChat, rena
 import type { Workspace, Chat, ChatStatus } from '../stores/workspace-store'
 import { customAddressStore } from '../stores/custom-address-store';
 import { setActiveWebview } from '~/stores/webview-store';
+import { collapsible } from '~/stores/collapsible';
 
 // ─── Platform icon ────────────────────────────────────────────────
 const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'svg'>>> = {
@@ -84,6 +85,7 @@ function ConversationItem({
   const workspaces = useSelector(workspaceStore, s => s.workspaces)
   const showMenu = isHovered || isMenuOpen
   const realGroups = workspaces.filter(w => w.id !== -1)
+  const isCollapsible = useSelector(collapsible, s => s ?? true)
 
   const handleRename = () => {
     setRenameValue(chat.title)
@@ -132,8 +134,9 @@ function ConversationItem({
             )
           }
         />
-        {showMenu && (
-          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+        {showMenu && !isCollapsible && (
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="pointer-events-auto">
             <MoreMenu
               size="sm"
               label="Conversation options"
@@ -146,6 +149,7 @@ function ConversationItem({
                 { label: 'Delete', onClick: () => deleteChat(chat.id) },
               ]}
             />
+            </div>
           </div>
         )}
       </Stack>

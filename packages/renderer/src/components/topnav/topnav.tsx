@@ -31,9 +31,14 @@ export default function TopNav() {
 	const handleCloseWebview = useCallback((e: React.MouseEvent, webviewId: string) => {
 		e.stopPropagation()
 		destroyWebview(webviewId)
+		const idx = activeWebviews.findIndex(w => w.id === webviewId)
 		const remaining = activeWebviews.filter(w => w.id !== webviewId)
 		if (remaining.length === 0) {
 			navigate({ to: '/' })
+		} else {
+			// Navigate to the previous webview, or the first one if closing the first tab
+			const next = remaining[Math.min(idx, remaining.length - 1)]
+			navigate({ to: '/chat/$chatId', params: { chatId: String(next.chatId) } })
 		}
 	}, [activeWebviews, navigate])
 
