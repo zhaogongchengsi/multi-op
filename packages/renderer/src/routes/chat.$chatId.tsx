@@ -4,6 +4,7 @@ import { useSelector } from '@tanstack/react-store'
 import { workspaceStore, selectChat } from '~/stores/workspace-store'
 import { PLATFORM_META } from '@multi-op/shared'
 import { useWebviewSlot } from '~/hooks/useWebviewSlot'
+import { customAddressStore } from '~/stores/custom-address-store';
 
 export const Route = createFileRoute('/chat/$chatId')({
   component: ChatView,
@@ -19,6 +20,7 @@ const PLATFORM_URLS: Record<string, string> = {
 function ChatView() {
   const { chatId } = Route.useParams()
   const workspaces = useSelector(workspaceStore, s => s.workspaces)
+  const customAddress = useSelector(customAddressStore, s => s.addresses)
   const numericId = Number(chatId)
 
   // ─── Switching indicator ───────────────────────────────────────
@@ -39,8 +41,18 @@ function ChatView() {
   const allChats = workspaces.flatMap(w => w.chats)
   const chat = allChats.find(c => c.id === numericId)
 
+  console.log('ChatView', chat)
+
   // Compute slot values (may be undefined when chat not found)
-  const platformUrl = chat ? PLATFORM_URLS[chat.platform] ?? '' : ''
+  let platformUrl = chat ? PLATFORM_URLS[chat.platform] ?? '' : ''
+
+  if (!platformUrl) {
+    const custom = customAddress.find((address) => address.id === chat?.platform)
+    if (custom) {
+      platformUrl = custom.url
+    }
+  }
+
   const partition = chat ? `persist:${chat.platform}-${chat.id}` : ''
   const accentColor = chat
     ? (PLATFORM_META as Record<string, { color: string }>)[chat.platform]?.color
