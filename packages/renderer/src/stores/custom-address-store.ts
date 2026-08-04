@@ -26,6 +26,19 @@ function config() {
   return window.bridge?.services?.config
 }
 
+function customAddressService() {
+  return window.bridge?.services?.customAddress
+}
+
+function isValidHttpUrl(raw: string): boolean {
+  try {
+    const parsed = new URL(raw)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function persist() {
   const { addresses } = customAddressStore.state
   config()?.write('settings.custom-addresses', { addresses }).catch(() => {})
@@ -51,9 +64,14 @@ export async function loadCustomAddresses(): Promise<void> {
   }
 }
 
-export function addAddress(addr: Omit<CustomAddress, 'id' | 'createdAt'>) {
+export async function addAddress(addr: Omit<CustomAddress, 'id' | 'createdAt'>) {
+  const autoIcon = !addr.icon && isValidHttpUrl(addr.url)
+    ? await customAddressService()?.resolveIcon(addr.url)
+    : null
+
   const address: CustomAddress = {
     ...addr,
+    icon: addr.icon ?? autoIcon ?? null,
     id: crypto.randomUUID(),
     createdAt: Date.now(),
   }

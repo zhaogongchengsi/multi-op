@@ -133,6 +133,11 @@ const webviewPreloadPath = join(__dirname, 'webview-preload.cjs')
         setNative: (mode: 'light' | 'dark' | 'system') =>
           ipcRenderer.invoke('settings:set-theme', mode),
       },
+      customAddress: {
+        /** Resolve favicon/icon for a custom address URL in main process */
+        resolveIcon: (url: string): Promise<string | null> =>
+          ipcRenderer.invoke('custom-address:resolve-icon', url),
+      },
     },
   })
 

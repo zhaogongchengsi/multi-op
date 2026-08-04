@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, protocol, shell } from 'electron'
+import { app, BrowserWindow, protocol, shell } from 'electron'
 import { resolve, join } from 'node:path'
 import { AppLifecycle } from '@multi-op/core'
 import { bootstrapDatabase } from './database.js'
@@ -10,6 +10,7 @@ import { createAppWindow } from './window.js'
 import { registerSessionRoutes } from './router/session.js'
 import { registerGroupRoutes } from './router/group.js'
 import { registerConfigRoutes } from './router/config.js'
+import { registerMainIpcHandlers } from './ipc/main-handlers.js'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
@@ -89,35 +90,7 @@ const bootstrap = async () => {
     }
   })
 
-  // ─── IPC: Window controls (for frameless window) ──────────────
-  ipcMain.on('window:minimize', (event) => {
-    BrowserWindow.fromWebContents(event.sender)?.minimize()
-  })
-  ipcMain.on('window:maximize', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender)
-    if (win?.isMaximized()) {
-      win.unmaximize()
-    } else {
-      win?.maximize()
-    }
-  })
-  ipcMain.on('window:close', (event) => {
-    BrowserWindow.fromWebContents(event.sender)?.close()
-  })
-
-  // ─── IPC: Auto-launch ─────────────────────────────────────────
-  ipcMain.handle('auto-launch:get', () => {
-    const settings = app.getLoginItemSettings()
-    return settings.openAtLogin
-  })
-  ipcMain.handle('auto-launch:set', (_event, enabled: boolean) => {
-    app.setLoginItemSettings({ openAtLogin: enabled })
-  })
-
-  // ─── IPC: Theme ───────────────────────────────────────────────
-  ipcMain.handle('settings:set-theme', (_event, mode: 'light' | 'dark' | 'system') => {
-    nativeTheme.themeSource = mode
-  })
+  registerMainIpcHandlers()
 
   // Create main window (created with show: false, shown on ready-to-show)
   logger.info('Creating main window...')

@@ -38,7 +38,11 @@ const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'s
   twitter: HashtagIcon,
 }
 
-function PlatformIcon({ platform }: { platform: string }) {
+function PlatformIcon({ platform, avatar }: { platform: string; avatar?: string | null }) {
+  if (avatar) {
+    return <img src={avatar} alt="" className="w-4 h-4 rounded-full shrink-0 object-cover" />
+  }
+
   const Icon = PLATFORM_ICONS[platform] ?? ChatBubbleLeftEllipsisIcon
   const meta = PLATFORM_META[platform as keyof typeof PLATFORM_META]
   return (
@@ -127,7 +131,7 @@ function ConversationItem({
           label={chat.title}
           isSelected={isSelected}
           onClick={onSelect}
-          icon={<PlatformIcon platform={chat.platform} />}
+          icon={<PlatformIcon platform={chat.platform} avatar={chat.avatar} />}
           endContent={
             showMenu ? null : (
               <StatusDot variant={statusVariant(chat.status)} label={chat.status} />
@@ -384,6 +388,7 @@ export function SidebarWorkspaces() {
                           null,
                           domain,
                           addr.url,
+                          addr.icon ?? null,
                         )
                         setIsDialogOpen(false)
                       }}

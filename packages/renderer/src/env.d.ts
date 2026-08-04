@@ -60,6 +60,10 @@ declare global {
     setNative: (mode: 'light' | 'dark' | 'system') => void
   }
 
+  interface CustomAddressAPI {
+    resolveIcon: (url: string) => Promise<string | null>
+  }
+
   interface BridgeServices {
     SCHEME_URL: string
     requestor: import('ky').KyInstance
@@ -68,6 +72,7 @@ declare global {
     config: ConfigAPI
     autoLaunch: AutoLaunchAPI
     theme: ThemeAPI
+    customAddress: CustomAddressAPI
   }
 
   interface Window {

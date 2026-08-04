@@ -13,6 +13,7 @@ export function CustomAddressesTab() {
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
   const [iconPreview, setIconPreview] = useState<string | null>(null)
+  const [isAdding, setIsAdding] = useState(false)
 
   const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -22,12 +23,17 @@ export function CustomAddressesTab() {
     reader.readAsDataURL(file)
   }
 
-  const handleAdd = () => {
-    if (!name.trim() || !url.trim()) return
-    addAddress({ name: name.trim(), url: url.trim(), icon: iconPreview })
-    setName('')
-    setUrl('')
-    setIconPreview(null)
+  const handleAdd = async () => {
+    if (!name.trim() || !url.trim() || isAdding) return
+    setIsAdding(true)
+    try {
+      await addAddress({ name: name.trim(), url: url.trim(), icon: iconPreview })
+      setName('')
+      setUrl('')
+      setIconPreview(null)
+    } finally {
+      setIsAdding(false)
+    }
   }
 
   return (
@@ -55,7 +61,8 @@ export function CustomAddressesTab() {
             label="Add address"
             variant="primary"
             onClick={handleAdd}
-            isDisabled={!name.trim() || !url.trim()}
+            isLoading={isAdding}
+            isDisabled={!name.trim() || !url.trim() || isAdding}
           />
         </FormLayout>
       </Section>
