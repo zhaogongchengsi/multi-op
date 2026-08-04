@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSelector } from '@tanstack/react-store'
-import { workspaceStore, selectChat } from '~/stores/workspace-store'
+import { workspaceStore, selectChat, ensureChatAvatarOnFirstOpen } from '~/stores/workspace-store'
 import { PLATFORM_META } from '@multi-op/shared'
 import { useWebviewSlot } from '~/hooks/useWebviewSlot'
 
@@ -40,6 +40,11 @@ function ChatView() {
   const chat = allChats.find(c => c.id === numericId)
 
   console.log('ChatView', chat)
+
+  useEffect(() => {
+    if (!chat) return
+    void ensureChatAvatarOnFirstOpen(chat)
+  }, [chat])
 
   // Compute slot values (may be undefined when chat not found)
   let platformUrl = ''

@@ -27,6 +27,8 @@ export interface WorkspaceState {
   error: string | null
 }
 
+const avatarResolveAttempted = new Set<number>()
+
 // ─── Helpers ─────────────────────────────────────────────────────
 function mapStatus(dbStatus: string | null): ChatStatus {
   switch (dbStatus) {
@@ -286,6 +288,39 @@ export async function moveChat(chatId: number, toGroupId: number | null) {
         ),
       }
     })
+  } catch (e) {
+    workspaceStore.setState(s => ({ ...s, error: String(e) }))
+  }
+}
+
+function resolveAvatarSourceUrl(chat: Chat): string | null {
+  if (chat.url) return chat.url
+  if (chat.platform.startsWith('http://') || chat.platform.startsWith('https://')) {
+    return chat.platform
+  }
+  return null
+}
+
+export async function ensureChatAvatarOnFirstOpen(chat: Chat): Promise<void> {
+  if (chat.avatar || avatarResolveAttempted.has(chat.id)) return
+
+  const sourceUrl = resolveAvatarSourceUrl(chat)
+  if (!sourceUrl) return
+
+  avatarResolveAttempted.add(chat.id)
+
+  try {
+    const icon = await window.bridge.services.customAddress.resolveIcon(sourceUrl)
+    if (!icon) return
+
+    await window.bridge.services.session.update(chat.id, { avatar: icon })
+    workspaceStore.setState(s => ({
+      ...s,
+      workspaces: s.workspaces.map(w => ({
+        ...w,
+        chats: w.chats.map(c => (c.id === chat.id ? { ...c, avatar: icon } : c)),
+      })),
+    }))
   } catch (e) {
     workspaceStore.setState(s => ({ ...s, error: String(e) }))
   }

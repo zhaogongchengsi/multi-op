@@ -1,6 +1,12 @@
 
 import { Tab, TabList } from '@astryxdesign/core';
-import { MinusIcon, Square2StackIcon, XMarkIcon, LockClosedIcon } from '@heroicons/react/16/solid';
+import { MinusIcon, Square2StackIcon, XMarkIcon } from '@heroicons/react/16/solid';
+import {
+	PaperAirplaneIcon,
+	ChatBubbleLeftRightIcon,
+	HashtagIcon,
+	ChatBubbleLeftEllipsisIcon,
+} from '@heroicons/react/24/outline';
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import { setActiveWebview } from '~/stores/webview-store';
@@ -11,6 +17,20 @@ import { workspaceStore } from '~/stores/workspace-store';
 import { webviewStore } from '~/stores/webview-store';
 
 const isWin = navigator.platform.startsWith('Win')
+
+const PLATFORM_ICONS: Record<string, React.ComponentType<React.ComponentProps<'svg'>>> = {
+	telegram: PaperAirplaneIcon,
+	whatsapp: ChatBubbleLeftRightIcon,
+	twitter: HashtagIcon,
+}
+
+function TabPlatformIcon({ platform, avatar }: { platform: string; avatar?: string | null }) {
+	if (avatar) {
+		return <img src={avatar} alt="" className="size-3.5 rounded-full object-cover shrink-0" />
+	}
+	const Icon = PLATFORM_ICONS[platform] ?? ChatBubbleLeftEllipsisIcon
+	return <Icon className="size-3.5 shrink-0" />
+}
 
 export default function TopNav() {
 	const [isMaximized, setIsMaximized] = useState(false)
@@ -59,6 +79,7 @@ export default function TopNav() {
 							key={w.id}
 							value={String(w.id)}
 							label={label}
+							icon={<TabPlatformIcon platform={chat?.platform ?? w.platform} avatar={chat?.avatar} />}
 							onClick={() => handleSelectWebview(w.chatId, w.id)}
 							endContent={
 								<XMarkIcon
